@@ -15,6 +15,8 @@ addressing plan, bring-up checklists, YouTube ideas). Code lives here; narrative
   status page + alerts). Bound to localhost; exposed on the tailnet via
   `tailscale serve` (see Security notes).
 - `vps/backup.sh` / `vps/restore.sh` — tarball backup and restore for the Kuma data volume.
+- `k8s/` — Kubernetes learning track: k3s on the Proxmox NUCs, coupled with the
+  VPS setup (one repo, two runtimes). See `k8s/README.md`.
 - `CHANGELOG.md` — what changed, when.
 
 ## Quickstart: the VPS (Hetzner)
@@ -72,4 +74,6 @@ takes user data; `docker-compose.yml` plus the data volume *is* the app.
 
 - Beszel hub on the VPS + agents on lab boxes (per-host metrics).
 - Lab-side bring-up: firewalls → switches → Proxmox → Tailscale subnet routing.
+- Kubernetes: k3s control plane on NUC-1, worker on NUC-2 — scaffold is in
+  `k8s/`, install runs during the Proxmox bring-up.
 - Kuma monitors for every lab service as it comes online.
