@@ -1,0 +1,6 @@
+# Local secrets and throwaway data — never commit.
+.env
+backups/
+*.tgz
+*.key
+*.pem

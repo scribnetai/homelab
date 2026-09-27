@@ -1,0 +1,69 @@
+#cloud-config
+# Homelab VPS bootstrap — portable across Hetzner, AWS, Azure, DigitalOcean.
+# Paste this whole file into the provider's "Cloud-init / User data" field
+# when creating the server (Hetzner: New server -> Cloud-init).
+#
+# *** BEFORE FIRST BOOT — one thing is yours to fill in ***
+#   Your SSH public key below (or add the key in the provider console instead;
+#   cloud-init merges both, so doing both is fine and safest).
+
+hostname: homelab-vps
+manage_etc_hosts: true
+
+users:
+  - name: techops
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys:
+      # TODO: replace with your public key. On your PC:
+      #   Windows (PowerShell): ssh-keygen -t ed25519
+      #   then: Get-Content $env:USERPROFILE\.ssh\id_ed25519.pub
+      - ssh-ed25519 TODO_REPLACE_WITH_YOUR_PUBLIC_KEY homelab
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - ufw
+  - unattended-upgrades
+  - jq
+
+write_files:
+  - path: /etc/apt/apt.conf.d/20auto-upgrades
+    permissions: "0644"
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+
+runcmd:
+  # --- Docker: official apt repo (Ubuntu 24.04) ---
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - sh -c 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable" > /etc/apt/sources.list.d/docker.list'
+  - apt-get update -y
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  - systemctl enable --now docker
+  - usermod -aG docker techops
+  # --- Tailscale ---
+  - curl -fsSL https://tailscale.com/install.sh | sh
+  - systemctl enable --now tailscaled
+  # --- Firewall: deny inbound by default; SSH open, tailnet open ---
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw allow 22/tcp comment 'SSH'
+  - ufw allow in on tailscale0 comment 'Tailnet'
+  - ufw --force enable
+  # --- Automatic security updates ---
+  - systemctl enable --now unattended-upgrades
+
+final_message: |
+  Homelab VPS bootstrap complete.
+  Next steps (SSH in as techops):
+    1. sudo tailscale up        # join your tailnet; approve SSO in the browser
+    2. git clone https://github.com/scribnetai/homelab.git
+    3. cd homelab/vps && docker compose up -d
+    4. Open http://<vps-tailnet-ip>:3001 and create the Uptime Kuma admin account

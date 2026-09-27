@@ -1,0 +1,19 @@
+# Homelab cloud services — portable: runs anywhere Docker runs.
+# Moving providers = copy this directory + restore the named volumes (see backup.sh).
+
+services:
+  uptime-kuma:
+    # Pinned to major version 1: picks up 1.x fixes, never a surprise v2 migration.
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
+    restart: unless-stopped
+    ports:
+      # Host ufw restricts this to the Tailscale interface only (see cloud-init.yaml).
+      - "3001:3001"
+    volumes:
+      - kuma-data:/app/data
+
+volumes:
+  kuma-data:
+    # Explicit name: backup.sh / restore.sh find it regardless of project dir name.
+    name: kuma-data
