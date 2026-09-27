@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-09-27 — Uptime Kuma v1 → v2
+- `vps/docker-compose.yml`: image moved from `louislam/uptime-kuma:1` to `:2`.
+  v1 is end-of-life (no security fixes); v2 is the maintained line. The (still empty)
+  v1 SQLite database auto-migrates on first v2 start.
+
 ## 2026-09-27 — Corrected VPS type/price
 - Hetzner no longer offers the old CX22 (~€3.79/mo) in Ashburn; the entry shared tier
   there is now CPX12 (1 vCPU, 2 GB RAM, 40 GB SSD) at $13.49/mo — still inside the

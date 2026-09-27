@@ -3,8 +3,9 @@
 
 services:
   uptime-kuma:
-    # Pinned to major version 1: picks up 1.x fixes, never a surprise v2 migration.
-    image: louislam/uptime-kuma:1
+    # Pinned to major version 2 (the maintained line; v1 is end-of-life).
+    # Picks up 2.x fixes, never a surprise v3 migration.
+    image: louislam/uptime-kuma:2
     container_name: uptime-kuma
     restart: unless-stopped
     ports:
