@@ -63,7 +63,8 @@ runcmd:
 final_message: |
   Homelab VPS bootstrap complete.
   Next steps (SSH in as techops):
-    1. sudo tailscale up        # join your tailnet; approve SSO in the browser
-    2. git clone https://github.com/scribnetai/homelab.git
-    3. cd homelab/vps && docker compose up -d
-    4. Open http://<vps-tailnet-ip>:3001 and create the Uptime Kuma admin account
+    1. sudo tailscale up                              # join your tailnet; approve SSO in the browser
+    2. sudo tailscale serve --bg http://127.0.0.1:3001  # expose Kuma on the tailnet (automatic HTTPS)
+    3. git clone https://github.com/scribnetai/homelab.git
+    4. cd homelab/vps && docker compose up -d
+    5. Open https://homelab-vps.<your-tailnet>.ts.net and create the Uptime Kuma admin account

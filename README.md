@@ -12,7 +12,8 @@ addressing plan, bring-up checklists, YouTube ideas). Code lives here; narrative
   Tailscale, ufw, automatic security updates). Portable: Hetzner, AWS, Azure and
   DigitalOcean all accept cloud-init user data.
 - `vps/docker-compose.yml` — cloud services. Today: Uptime Kuma (uptime monitoring +
-  status page + alerts).
+  status page + alerts). Bound to localhost; exposed on the tailnet via
+  `tailscale serve` (see Security notes).
 - `vps/backup.sh` / `vps/restore.sh` — tarball backup and restore for the Kuma data volume.
 - `CHANGELOG.md` — what changed, when.
 
@@ -32,9 +33,21 @@ addressing plan, bring-up checklists, YouTube ideas). Code lives here; narrative
    - Name: `homelab-vps` → **Create**
 3. `ssh techops@<server-ip>`
 4. `sudo tailscale up` — approve the SSO login in your browser.
-5. `git clone https://github.com/scribnetai/homelab.git && cd homelab/vps && docker compose up -d`
-6. From your phone or PC (on the tailnet): `http://<vps-tailnet-ip>:3001` →
-   create the Kuma admin account. Start adding monitors.
+5. `sudo tailscale serve --bg http://127.0.0.1:3001` — publishes Kuma on your tailnet
+   with automatic HTTPS. Verify with `tailscale serve status`.
+6. `git clone https://github.com/scribnetai/homelab.git && cd homelab/vps && docker compose up -d`
+7. From your phone or PC (on the tailnet): `https://homelab-vps.<your-tailnet>.ts.net`
+   (find your tailnet name with `tailscale status`) → create the Kuma admin account.
+   Start adding monitors.
+
+## Security notes
+
+- Kuma binds to `127.0.0.1` only. Docker programs iptables directly and **bypasses ufw**,
+  so publishing the port normally would expose it to the public internet despite the
+  host firewall. `tailscale serve` is what puts it on the tailnet (with HTTPS) —
+  nothing ever listens publicly.
+- Defense in depth: in the Hetzner console, attach a firewall allowing inbound
+  `22/tcp` only. On other providers, translate to their equivalent.
 
 ## Backup & restore
 
@@ -51,7 +64,8 @@ takes user data; `docker-compose.yml` plus the data volume *is* the app.
 1. `./backup.sh` on the old box, copy the tarball off.
 2. New VM anywhere, same `cloud-init.yaml` pasted as user data.
 3. Clone this repo, `./restore.sh backups/<file>.tgz`, `docker compose up -d`.
-4. `sudo tailscale up` with the **same node name** — MagicDNS stays stable.
+4. `sudo tailscale up` with the **same node name** — MagicDNS stays stable, then
+   re-run the `tailscale serve` command from step 5 above.
 5. Update DNS if anything public pointed at the old IP. Done.
 
 ## What's next

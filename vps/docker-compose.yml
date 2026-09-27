@@ -8,8 +8,10 @@ services:
     container_name: uptime-kuma
     restart: unless-stopped
     ports:
-      # Host ufw restricts this to the Tailscale interface only (see cloud-init.yaml).
-      - "3001:3001"
+      # Localhost only. Docker programs iptables directly and bypasses ufw,
+      # so a normally-published port would be reachable from the public internet.
+      # Kuma reaches the tailnet via `tailscale serve` (see README).
+      - "127.0.0.1:3001:3001"
     volumes:
       - kuma-data:/app/data
 
