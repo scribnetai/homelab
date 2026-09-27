@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-09-27 — Kubernetes track: k3s scaffold
+- New `k8s/` tree, coupled with the VPS setup in this same repo (one repo, two
+  runtimes). Same container images either way; the orchestrator is what differs.
+- `k8s/k3s-install.sh`: server/agent bootstrap for Proxmox VMs (control plane
+  on NUC-1, worker on NUC-2). Nodes join over Tailscale IPs so the VPS can
+  later join as a hybrid agent with the same commands.
+- `k8s/manifests/demo-whoami.yaml`: first smoke-test workload (Namespace +
+  Deployment + Service), including the "delete a pod and watch it reschedule"
+  exercise.
+- `k8s/README.md`: topology, bring-up steps, and an ordered learning path
+  (whoami → Ingress → Longhorn → Helm → ArgoCD → migrate a Compose service).
+- `k8s/LEARNING.md`: containers-vs-VMs and every core K8s object mapped to
+  datacenter/VMware mental models.
+- Deliberate: Kuma stays on the VPS via Compose — the watcher lives outside
+  the cluster's failure domain.
+
 ## 2026-09-27 — Uptime Kuma v1 → v2
 - `vps/docker-compose.yml`: image moved from `louislam/uptime-kuma:1` to `:2`.
   v1 is end-of-life (no security fixes); v2 is the maintained line. The (still empty)
