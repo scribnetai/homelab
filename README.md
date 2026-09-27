@@ -25,7 +25,7 @@ addressing plan, bring-up checklists, YouTube ideas). Code lives here; narrative
 2. Hetzner Cloud console → new project → **Add server**:
    - Location: **Ashburn, VA**
    - Image: **Ubuntu 24.04**
-   - Type: **CX22** (~€3.79/mo)
+   - Type: **Shared Resources → Regular Performance → CPX12** (~$13.49/mo)
    - Networking: defaults
    - SSH keys: add your public key
    - Cloud-init: paste the full contents of `vps/cloud-init.yaml`
