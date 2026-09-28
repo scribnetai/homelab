@@ -17,10 +17,27 @@ different orchestration.
   agent over Tailscale for a hybrid home+cloud cluster. Not day one — learn on
   hardware you can power-cycle first.
 
+## Provisioning the VMs (Terraform)
+
+The two Proxmox VMs are defined as code in [`terraform/`](terraform/) (the
+`bpg/proxmox` provider): full clones of a single Ubuntu 24.04 cloud-init
+template, with cloud-init installing the qemu guest agent + Tailscale and
+assigning the lab-net IPs (`192.168.128.21/24` server, `.22/24` agent).
+
+Flow: `build-template.sh` once on a Proxmox node → fill in `terraform.tfvars` →
+`terraform apply` → `tailscale up` on each VM → **snapshot both VMs** (your
+rewind point for when the cluster inevitably breaks during learning) → continue
+with bring-up step 2 below. Full instructions in [`terraform/README.md`](terraform/README.md).
+
+Auth is via the `PROXMOX_VE_API_TOKEN` env var (Datacenter → Permissions → API
+Tokens) — never committed. `tailscale up` stays a manual one-per-VM step for
+the same reason: no auth keys in the repo.
+
 ## Bring-up
 
-1. During the lab bring-up (after Proxmox is up), create the two VMs above and
-   install Tailscale on each.
+1. During the lab bring-up (after Proxmox is up), provision the two VMs with
+   Terraform — see [Provisioning the VMs](#provisioning-the-vms-terraform) below.
+   Then `tailscale up` on each VM.
 2. On the server VM: `sudo bash k3s-install.sh server` — it prints the agent join
    token at the end.
 3. On the agent VM:
