@@ -1,0 +1,18 @@
+# Copy to terraform.tfvars and fill in. Never commit terraform.tfvars.
+proxmox_endpoint = "https://192.168.128.10:8006/" # <-- your Proxmox node's IP
+
+# Defaults below are fine if your nodes are named proxmox/proxmox2 and the lab
+# net matches the homelab plan. Uncomment and change only what differs.
+# proxmox_node_server = "proxmox"
+# proxmox_node_agent  = "proxmox2"
+# template_id         = 9000
+# gateway             = "192.168.128.1"
+# server_ip           = "192.168.128.21/24"
+# agent_ip            = "192.168.128.22/24"
+
+ssh_username    = "scribnet"
+ssh_public_keys = ["ssh-ed25519 AAAA... paste your public key here"]
+
+# Auth (env var, never in a file):
+#   export PROXMOX_VE_API_TOKEN='root@pam!terraform=YOUR_TOKEN_SECRET'
+# Create at: Datacenter → Permissions → API Tokens.
