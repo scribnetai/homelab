@@ -1,0 +1,23 @@
+#cloud-config
+# Rendered per-node by Terraform (files/user-data.yaml.tftpl).
+# Installs the qemu guest agent and Tailscale. You run `tailscale up` once per
+# VM by hand afterwards — no Tailscale auth keys live in this repo.
+hostname: ${hostname}
+manage_etc_hosts: true
+package_update: true
+packages:
+  - qemu-guest-agent
+users:
+  - name: ${username}
+    groups: sudo
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+%{ for key in ssh_keys ~}
+      - ${key}
+%{ endfor ~}
+runcmd:
+  - systemctl enable --now qemu-guest-agent
+  - curl -fsSL https://tailscale.com/install.sh -o /tmp/tailscale-install.sh
+  - sh /tmp/tailscale-install.sh
+  - systemctl enable --now tailscaled
