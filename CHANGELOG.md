@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-09-28 — k3s Terraform review fixes
+- `k8s/terraform/versions.tf`: `bpg/proxmox` pin tightened `>= 0.60` → `~> 0.111`
+  (0.111.x verified current 2026-08) — a future 0.x breaking change can't
+  surprise a later `terraform init`.
+- Template docs corrected: the clone is node-local, so `build-template.sh`
+  must run on EACH standalone Proxmox node (same VMID 9000 on both); clustered
+  nodes need it only once. Updated `k8s/terraform/README.md`,
+  `build-template.sh` header, and the `k8s/README.md` provisioning section.
+
 ## 2026-09-27 — Terraform provisioning for the k3s nodes
 - New `k8s/terraform/`: `bpg/proxmox` Terraform that builds the two k3s Proxmox
   VMs (server on NUC-1, agent on NUC-2) as full clones of one Ubuntu 24.04
