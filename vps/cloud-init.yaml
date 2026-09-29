@@ -11,7 +11,7 @@ hostname: homelab-vps
 manage_etc_hosts: true
 
 users:
-  - name: techops
+  - name: labuser
     shell: /bin/bash
     sudo: ALL=(ALL) NOPASSWD:ALL
     ssh_authorized_keys:
@@ -47,7 +47,7 @@ runcmd:
   - apt-get update -y
   - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
   - systemctl enable --now docker
-  - usermod -aG docker techops
+  - usermod -aG docker labuser
   # --- Tailscale ---
   - curl -fsSL https://tailscale.com/install.sh | sh
   - systemctl enable --now tailscaled
@@ -62,7 +62,7 @@ runcmd:
 
 final_message: |
   Homelab VPS bootstrap complete.
-  Next steps (SSH in as techops):
+  Next steps (SSH in as labuser):
     1. sudo tailscale up                              # join your tailnet; approve SSO in the browser
     2. sudo tailscale serve --bg http://127.0.0.1:3001  # expose Kuma on the tailnet (automatic HTTPS)
     3. git clone https://github.com/<your-org>/homelab.git

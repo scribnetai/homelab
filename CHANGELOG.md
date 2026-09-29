@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-28 — Sanitize: remove remaining personal SSH username
+- Replaced the last personal SSH username references (`techops` → `labuser`)
+  missed by the earlier sanitize pass: `README.md` quick-start step,
+  `vps/cloud-init.yaml` (user creation, docker group, final message), and
+  `vps/backup.sh` (scp example). Matches the `labuser` convention used in
+  `k8s/terraform/variables.tf`.
+
 ## 2026-09-28 — Sanitize repo: remove personal identifiers
 - Combed the whole repo for personal references. Removed the GitHub org/user
   name (`vps/cloud-init.yaml`, `README.md` clone URLs now use
