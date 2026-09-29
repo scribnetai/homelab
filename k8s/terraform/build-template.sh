@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 #
-# One-time build of the Ubuntu 24.04 cloud-init template used by k8s/terraform.
+# Build of the Ubuntu 24.04 cloud-init template used by k8s/terraform.
 #
-# Run ON a Proxmox node (it calls qm directly), e.g.:
+# Run on EACH Proxmox node that will host k3s VMs (it calls qm directly).
+# Standalone nodes: run on both (each node clones from its own local copy).
+# Clustered nodes: once is enough (VMIDs are cluster-wide). E.g.:
 #   scp build-template.sh root@<proxmox-node>:/tmp/
 #   ssh root@<proxmox-node> "bash /tmp/build-template.sh"
 #
