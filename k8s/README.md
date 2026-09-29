@@ -9,7 +9,7 @@ different orchestration.
 ## Topology
 
 - **k3s server (control plane):** Proxmox VM on NUC-1 — 2 vCPU / 4 GB RAM /
-  32 GB disk, on the lab net (`192.168.128.0/24`).
+  32 GB disk, on the lab net (`192.0.2.0/24`).
 - **k3s agent (worker):** Proxmox VM on NUC-2, same sizing.
 - **Access:** `kubectl` from your PC over Tailscale. The install script adds the
   node's Tailscale IP as a TLS SAN, so the kubeconfig just works remotely.
@@ -21,11 +21,12 @@ different orchestration.
 
 The two Proxmox VMs are defined as code in [`terraform/`](terraform/) (the
 `bpg/proxmox` provider): full clones of an Ubuntu 24.04 cloud-init template
-(VM 9000, built on each node by `build-template.sh`), with cloud-init
+(VM 9000 — build once per cluster with `build-template.sh`, or on each node if
+standalone), with cloud-init
 installing the qemu guest agent + Tailscale and assigning the lab-net IPs
-(`192.168.128.21/24` server, `.22/24` agent).
+(`192.0.2.21/24` server, `.22/24` agent).
 
-Flow: `build-template.sh` on each Proxmox node → fill in `terraform.tfvars` →
+Flow: `build-template.sh` (once per cluster, or per node if standalone) → fill in `terraform.tfvars` →
 `terraform apply` → `tailscale up` on each VM → **snapshot both VMs** (your
 rewind point for when the cluster inevitably breaks during learning) → continue
 with bring-up step 2 below. Full instructions in [`terraform/README.md`](terraform/README.md).
