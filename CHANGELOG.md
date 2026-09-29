@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-09-28 — Sanitize repo: remove personal identifiers
+- Combed the whole repo for personal references. Removed the GitHub org/user
+  name (`vps/cloud-init.yaml`, `README.md` clone URLs now use
+  `github.com/<your-org>/homelab`), the personal SSH username default
+  (`scribnet` → `labuser` in `k8s/terraform/variables.tf` and
+  `terraform.tfvars.example`), and the real lab IP schema (`192.168.128.0/24`
+  → documentation range `192.0.2.0/24` in `variables.tf`,
+  `terraform.tfvars.example`, `k8s/README.md`). Fill in your own values in
+  `terraform.tfvars` (gitignored, never committed).
+- `k8s/README.md`: also corrected two leftover lines that still said
+  `build-template.sh` runs "on each node" — it's once per cluster (per node
+  only if standalone), matching `k8s/terraform/README.md`.
+
 ## 2026-09-28 — k3s Terraform review fixes
 - `k8s/terraform/versions.tf`: `bpg/proxmox` pin tightened `>= 0.60` → `~> 0.111`
   (0.111.x verified current 2026-08) — a future 0.x breaking change can't
