@@ -33,7 +33,7 @@ addressing plan, bring-up checklists, YouTube ideas). Code lives here; narrative
    - Cloud-init: paste the full contents of `vps/cloud-init.yaml`
      (put your SSH public key in the `TODO` slot first)
    - Name: `homelab-vps` → **Create**
-3. `ssh techops@<server-ip>`
+3. `ssh labuser@<server-ip>`
 4. `sudo tailscale up` — approve the SSO login in your browser.
 5. `sudo tailscale serve --bg http://127.0.0.1:3001` — publishes Kuma on your tailnet
    with automatic HTTPS. Verify with `tailscale serve status`.

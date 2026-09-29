@@ -11,4 +11,4 @@ docker run --rm \
   alpine:3 tar czf "/backup/kuma-data-${STAMP}.tgz" -C /data .
 echo "OK: backups/kuma-data-${STAMP}.tgz"
 echo "Copy it off the server, e.g.:"
-echo "  scp techops@<vps-ip>:homelab/vps/backups/kuma-data-${STAMP}.tgz ."
+echo "  scp labuser@<vps-ip>:homelab/vps/backups/kuma-data-${STAMP}.tgz ."
