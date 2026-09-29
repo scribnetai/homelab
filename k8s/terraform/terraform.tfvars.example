@@ -10,7 +10,7 @@ proxmox_endpoint = "https://192.0.2.10:8006/" # <-- your Proxmox node's IP
 # server_ip           = "192.0.2.21/24"
 # agent_ip            = "192.0.2.22/24"
 
-ssh_username    = "scribnet"
+ssh_username    = "labuser"
 ssh_public_keys = ["ssh-ed25519 AAAA... paste your public key here"]
 
 # Auth (env var, never in a file):
