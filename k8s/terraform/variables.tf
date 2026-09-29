@@ -1,5 +1,5 @@
 variable "proxmox_endpoint" {
-  description = "Proxmox API endpoint, e.g. https://192.168.128.10:8006/ (no default — set yours)"
+  description = "Proxmox API endpoint, e.g. https://192.0.2.10:8006/ (no default — set yours)"
   type        = string
 }
 
@@ -42,7 +42,7 @@ variable "cloudinit_datastore" {
 variable "gateway" {
   description = "Lab net gateway"
   type        = string
-  default     = "192.168.128.1"
+  default     = "192.0.2.1"
 }
 
 variable "dns_servers" {
@@ -54,19 +54,19 @@ variable "dns_servers" {
 variable "server_ip" {
   description = "k3s server VM address (CIDR)"
   type        = string
-  default     = "192.168.128.21/24"
+  default     = "192.0.2.21/24"
 }
 
 variable "agent_ip" {
   description = "k3s agent VM address (CIDR)"
   type        = string
-  default     = "192.168.128.22/24"
+  default     = "192.0.2.22/24"
 }
 
 variable "ssh_username" {
   description = "Username created by cloud-init on both VMs"
   type        = string
-  default     = "scribnet"
+  default     = "labuser"
 }
 
 variable "ssh_public_keys" {
