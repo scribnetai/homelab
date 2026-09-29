@@ -66,7 +66,7 @@ variable "agent_ip" {
 variable "ssh_username" {
   description = "Username created by cloud-init on both VMs"
   type        = string
-  default     = "scribnet"
+  default     = "labuser"
 }
 
 variable "ssh_public_keys" {
