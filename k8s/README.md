@@ -20,11 +20,12 @@ different orchestration.
 ## Provisioning the VMs (Terraform)
 
 The two Proxmox VMs are defined as code in [`terraform/`](terraform/) (the
-`bpg/proxmox` provider): full clones of a single Ubuntu 24.04 cloud-init
-template, with cloud-init installing the qemu guest agent + Tailscale and
-assigning the lab-net IPs (`192.168.128.21/24` server, `.22/24` agent).
+`bpg/proxmox` provider): full clones of an Ubuntu 24.04 cloud-init template
+(VM 9000, built on each node by `build-template.sh`), with cloud-init
+installing the qemu guest agent + Tailscale and assigning the lab-net IPs
+(`192.168.128.21/24` server, `.22/24` agent).
 
-Flow: `build-template.sh` once on a Proxmox node → fill in `terraform.tfvars` →
+Flow: `build-template.sh` on each Proxmox node → fill in `terraform.tfvars` →
 `terraform apply` → `tailscale up` on each VM → **snapshot both VMs** (your
 rewind point for when the cluster inevitably breaks during learning) → continue
 with bring-up step 2 below. Full instructions in [`terraform/README.md`](terraform/README.md).
