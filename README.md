@@ -37,7 +37,7 @@ addressing plan, bring-up checklists, YouTube ideas). Code lives here; narrative
 4. `sudo tailscale up` — approve the SSO login in your browser.
 5. `sudo tailscale serve --bg http://127.0.0.1:3001` — publishes Kuma on your tailnet
    with automatic HTTPS. Verify with `tailscale serve status`.
-6. `git clone https://github.com/scribnetai/homelab.git && cd homelab/vps && docker compose up -d`
+6. `git clone https://github.com/<your-org>/homelab.git && cd homelab/vps && docker compose up -d`
 7. From your phone or PC (on the tailnet): `https://homelab-vps.<your-tailnet>.ts.net`
    (find your tailnet name with `tailscale status`) → create the Kuma admin account.
    Start adding monitors.
