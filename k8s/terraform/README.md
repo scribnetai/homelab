@@ -10,14 +10,19 @@ PC (native Windows binary or WSL both work).
 - A Proxmox API token: **Datacenter → Permissions → API Tokens** → Add (give it
   to a user with admin on the two nodes, e.g. `root@pam`). Copy the secret once.
 
-## 1. Build the golden template (one time)
+## 1. Build the golden template
 
-The template is what both VMs clone. Build it on a Proxmox node:
+The template is what both VMs clone. Each Proxmox node needs a local copy
+(the clone is node-local):
 
 ```bash
-scp build-template.sh root@<proxmox-node>:/tmp/
-ssh root@<proxmox-node> "bash /tmp/build-template.sh"
+for node in <proxmox-node-1> <proxmox-node-2>; do
+  scp build-template.sh root@$node:/tmp/
+  ssh root@$node "bash /tmp/build-template.sh"
+done
 ```
+
+(If your nodes are clustered, run it once — VMIDs are cluster-wide there.)
 
 This downloads the Ubuntu 24.04 cloud image, imports it to `local-lvm`, wires up
 the cloud-init drive + serial console + qemu guest agent, and converts VM 9000
