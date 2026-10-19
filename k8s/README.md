@@ -21,18 +21,20 @@ different orchestration.
 
 The two Proxmox VMs are defined as code in [`terraform/`](terraform/) (the
 `bpg/proxmox` provider): full clones of an Ubuntu 24.04 cloud-init template
-(VM 9000 — build once per cluster with `build-template.sh`, or on each node if
-standalone), with cloud-init
+(VM 9000 — one copy per node with `build-template.sh`, distinct VMIDs
+9000/9001 in a cluster: the clone runs on the target node and storage is
+local), with cloud-init
 installing the qemu guest agent + Tailscale and assigning the lab-net IPs
 (`192.0.2.21/24` server, `.22/24` agent).
 
-Flow: `build-template.sh` (once per cluster, or per node if standalone) → fill in `terraform.tfvars` →
+Flow: `build-template.sh` (once per node on local storage) → fill in `terraform.tfvars` →
 `terraform apply` → `tailscale up` on each VM → **snapshot both VMs** (your
 rewind point for when the cluster inevitably breaks during learning) → continue
 with bring-up step 2 below. Full instructions in [`terraform/README.md`](terraform/README.md).
 
-Auth is via the `PROXMOX_VE_API_TOKEN` env var (Datacenter → Permissions → API
-Tokens) — never committed. `tailscale up` stays a manual one-per-VM step for
+Auth is via env vars — `PROXMOX_VE_API_TOKEN` for the API plus
+`PROXMOX_VE_SSH_USERNAME` / `PROXMOX_VE_SSH_PASSWORD` for the provider's
+SSH snippet uploads (Datacenter → Permissions → API Tokens) — never committed. `tailscale up` stays a manual one-per-VM step for
 the same reason: no auth keys in the repo.
 
 ## Bring-up

@@ -4,3 +4,10 @@ backups/
 *.tgz
 *.key
 *.pem
+
+# Terraform local values, state, and working dirs — never commit.
+*.tfvars
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfplan

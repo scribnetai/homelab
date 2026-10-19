@@ -9,20 +9,22 @@
 locals {
   nodes = {
     server = {
-      node_name = var.proxmox_node_server
-      hostname  = "k3s-server"
-      cores     = 2
-      memory    = 4096
-      disk_gb   = 32
-      ip        = var.server_ip
+      node_name   = var.proxmox_node_server
+      hostname    = "k3s-server"
+      template_id = 9000
+      cores       = 2
+      memory      = 4096
+      disk_gb     = 32
+      ip          = var.server_ip
     }
     agent = {
-      node_name = var.proxmox_node_agent
-      hostname  = "k3s-agent"
-      cores     = 2
-      memory    = 4096
-      disk_gb   = 32
-      ip        = var.agent_ip
+      node_name   = var.proxmox_node_agent
+      hostname    = "k3s-agent"
+      template_id = 9001
+      cores       = 2
+      memory      = 4096
+      disk_gb     = 32
+      ip          = var.agent_ip
     }
   }
 }
@@ -61,7 +63,7 @@ resource "proxmox_virtual_environment_vm" "k3s" {
   # vm_id omitted → Proxmox assigns the next free ID.
 
   clone {
-    vm_id = var.template_id
+    vm_id = each.value.template_id
     full  = true
   }
 

@@ -5,14 +5,18 @@ proxmox_endpoint = "https://192.0.2.10:8006/" # <-- your Proxmox node's IP
 # net matches the homelab plan. Uncomment and change only what differs.
 # proxmox_node_server = "proxmox"
 # proxmox_node_agent  = "proxmox2"
-# template_id         = 9000
 # gateway             = "192.0.2.1"
+# (Template VMIDs are per-node and live in main.tf locals: 9000, 9001, ...)
 # server_ip           = "192.0.2.21/24"
 # agent_ip            = "192.0.2.22/24"
 
 ssh_username    = "labuser"
 ssh_public_keys = ["ssh-ed25519 AAAA... paste your public key here"]
 
-# Auth (env var, never in a file):
+# Auth (env vars, never in a file):
 #   export PROXMOX_VE_API_TOKEN='root@pam!terraform=YOUR_TOKEN_SECRET'
-# Create at: Datacenter → Permissions → API Tokens.
+#   export PROXMOX_VE_SSH_USERNAME='root'
+#   export PROXMOX_VE_SSH_PASSWORD='YOUR_SSH_PASSWORD'
+# The token covers API calls; the SSH pair covers the provider's cloud-init
+# snippet uploads to the nodes. Token created at:
+# Datacenter → Permissions → API Tokens.

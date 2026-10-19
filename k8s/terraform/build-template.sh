@@ -3,8 +3,12 @@
 # Build of the Ubuntu 24.04 cloud-init template used by k8s/terraform.
 #
 # Run on EACH Proxmox node that will host k3s VMs (it calls qm directly).
-# Standalone nodes: run on both (each node clones from its own local copy).
-# Clustered nodes: once is enough (VMIDs are cluster-wide). E.g.:
+# The Terraform provider runs the clone on the target node, so with local
+# storage every node needs its own copy of the template. In a cluster the
+# copies need DISTINCT IDs (VMIDs are cluster-wide): 9000 on the first
+# node, TEMPLATE_ID=9001 on the second — main.tf's locals map carries the
+# matching per-node template_id. (Separate standalone nodes may each use
+# 9000.) E.g.:
 #   scp build-template.sh root@<proxmox-node>:/tmp/
 #   ssh root@<proxmox-node> "bash /tmp/build-template.sh"
 #

@@ -9,24 +9,37 @@ PC (native Windows binary or WSL both work).
 - Terraform >= 1.6 installed.
 - A Proxmox API token: **Datacenter → Permissions → API Tokens** → Add (give it
   to a user with admin on the two nodes, e.g. `root@pam`). Copy the secret once.
+- Storage: the cloud-init datastore (`local` by default) must allow the
+  **Snippets** and **Disk images** content types (Datacenter → Storage →
+  `local` → Edit → Content). Snippets hold the cloud-init user-data; the
+  generated cloud-init ISO is stored as a disk image. Both fail at apply
+  time if the content types are missing.
+- Node SSH access for the provider: the cloud-init snippet uploads go over
+  SSH, not the API. Either set `PROXMOX_VE_SSH_USERNAME` /
+  `PROXMOX_VE_SSH_PASSWORD` (step 2), or load your key in ssh-agent with
+  the matching public key authorized for root on the nodes.
 
 ## 1. Build the golden template
 
-The template is what both VMs clone. Each Proxmox node needs a local copy
-(the clone is node-local):
+The template is what both VMs clone. Each Proxmox node needs a local copy —
+the provider runs the clone on the target node, so with local storage a
+template on one node cannot serve the other:
 
 ```bash
-for node in <proxmox-node-1> <proxmox-node-2>; do
-  scp build-template.sh root@$node:/tmp/
-  ssh root@$node "bash /tmp/build-template.sh"
-done
+scp build-template.sh root@<proxmox-node-1>:/tmp/
+ssh root@<proxmox-node-1> "bash /tmp/build-template.sh"
+scp build-template.sh root@<proxmox-node-2>:/tmp/
+ssh root@<proxmox-node-2> "TEMPLATE_ID=9001 bash /tmp/build-template.sh"
 ```
 
-(If your nodes are clustered, run it once — VMIDs are cluster-wide there.)
+In a cluster the copies need distinct VMIDs (9000, 9001, ...) matching the
+per-node `template_id` in `main.tf`'s `locals.nodes`. (Separate standalone
+nodes may each reuse 9000.)
 
 This downloads the Ubuntu 24.04 cloud image, imports it to `local-lvm`, wires up
-the cloud-init drive + serial console + qemu guest agent, and converts VM 9000
-into a template. Re-run any time you want to refresh the base image.
+the cloud-init drive + serial console + qemu guest agent, and converts the VM
+(9000 by default) into a template. Re-run any time you want to refresh the
+base image.
 
 ## 2. Configure
 
@@ -40,7 +53,13 @@ git — same rule as every other credential in this repo).
 
 ```bash
 export PROXMOX_VE_API_TOKEN='root@pam!terraform=YOUR_TOKEN_SECRET'
+export PROXMOX_VE_SSH_USERNAME='root'
+export PROXMOX_VE_SSH_PASSWORD='YOUR_SSH_PASSWORD'
 ```
+
+The SSH pair is the provider's second auth leg — it uploads the cloud-init
+snippets to the nodes. All three variables live only in your shell session;
+none of them ever go in a file.
 
 ## 3. Apply
 
