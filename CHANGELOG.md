@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-10-19 — k3s Terraform: first live apply lessons (per-node templates, SSH leg, storage prereqs)
+- Per-node templates — corrects the 2026-09-28 notes below: with local
+  storage the bpg/proxmox provider runs the clone on the target node, so
+  every node hosting k3s VMs needs its own template copy, and in a
+  cluster the copies take distinct VMIDs (9000 / 9001 via
+  `TEMPLATE_ID=9001`). `main.tf` now sets `template_id` per node in
+  `locals.nodes`; the global `template_id` variable was removed from
+  `variables.tf` / `terraform.tfvars.example`. (Driven by the first live
+  deployment session: k3s-server applied cleanly once these were fixed.)
+- The provider's second auth leg is documented: cloud-init snippet
+  uploads go over SSH, not the API — `PROXMOX_VE_SSH_USERNAME` /
+  `PROXMOX_VE_SSH_PASSWORD` (or ssh-agent keys) alongside
+  `PROXMOX_VE_API_TOKEN`. Env vars only, never files.
+- Storage prerequisite documented: the cloud-init datastore (`local`)
+  must allow the **Snippets** and **Disk images** content types, or the
+  snippet upload and cloud-init ISO generation fail during apply.
+- `.gitignore`: added Terraform local files (`*.tfvars`, `*.tfstate*`,
+  `.terraform/`, `*.tfplan`) — previously covered by convention only.
+
 ## 2026-09-28 — Sanitize: remove remaining personal SSH username
 - Replaced the last personal SSH username references (`techops` → `labuser`)
   missed by the earlier sanitize pass: `README.md` quick-start step,

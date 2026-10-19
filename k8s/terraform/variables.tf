@@ -21,12 +21,6 @@ variable "proxmox_node_agent" {
   default     = "proxmox2"
 }
 
-variable "template_id" {
-  description = "VMID of the cloud-init template built by build-template.sh"
-  type        = number
-  default     = 9000
-}
-
 variable "vm_datastore" {
   description = "Datastore for VM disks"
   type        = string
