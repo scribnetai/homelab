@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-21 — Hermes Agent deployment as IaC (two-service compose)
+- New `hermes/`: the deployed `docker-compose.yml` for the Hermes Agent VM — one file, two services sharing one data volume: `hermes` (messaging gateway + cron) and `hermes-backend` (`hermes serve`, the Hermes Desktop / dashboard backend, published only on the VM's Tailscale IP — placeholdered in the committed file). Auth, secrets, and operating rules in `hermes/README.md`; the data dir is host-local and gitignored, secrets only in its `.env`.
+
 ## 2026-10-19 — k3s Terraform: first live apply lessons (per-node templates, SSH leg, storage prereqs)
 - Per-node templates — corrects the 2026-09-28 notes below: with local
   storage the bpg/proxmox provider runs the clone on the target node, so
