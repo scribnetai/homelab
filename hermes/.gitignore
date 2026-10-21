@@ -1,0 +1,3 @@
+# The deployment's data dir is host-local state (profiles, sessions,
+# config, secrets) — never commit it.
+data/
