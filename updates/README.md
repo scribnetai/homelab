@@ -9,15 +9,39 @@ per-class decision, not a default.
 Rollout to the other apt hosts is phase 2: the check script is a single
 self-contained file — copy it to a host and it works there.
 
+## Getting the script onto a host
+
+The checker is one self-contained file, and most hosts carry no repo
+clone — so fetch it from this repo and verify its fingerprint before
+running anything:
+
+```
+curl -fsSL https://raw.githubusercontent.com/scribnetai/homelab/main/updates/check-updates.sh -o /tmp/check-updates.sh
+sha256sum /tmp/check-updates.sh
+```
+
+Compare the fingerprint against the trusted copy: the clone on
+homelab-vps (`sha256sum ~/homelab/updates/check-updates.sh`, kept
+current by `git pull`). If they differ, stop — the download is stale
+or wrong. The pin is deliberately not printed here: it rotates with
+every script change, and a stale printed hash is worse than none.
+Then:
+
+```
+bash /tmp/check-updates.sh          # check (read-only)
+bash /tmp/check-updates.sh --apply # apply (interactive)
+```
+
 ## The workflow
 
 1. **See (Beszel).** Open the hub's All Systems view. The Updates column
    is the fleet picture — but counts are *cached*: metrics refresh ~every
    minute, the update check runs on a slow cycle and at agent start.
    A yellow count is a prompt to look, not a fact.
-2. **Verify (on the host).** Run the checker:
+2. **Verify (on the host).** Run the checker (distribution:
+   "Getting the script onto a host", above):
    ```
-   ./check-updates.sh
+   bash /tmp/check-updates.sh
    ```
    Read-only: it refreshes package metadata (installs nothing) and
    reports the simulated dist-upgrade — the count, the package names,

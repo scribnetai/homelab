@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-24 — updates/README: script distribution documented
+- New "Getting the script onto a host" section: the exact fetch + sha256 fingerprint check + run block used in the phase-2 rollout, with the fingerprint compared against the trusted homelab-vps clone (the pin is deliberately not printed — it rotates with every script change). Step 2's invocation now matches the /tmp flow. Phase-2 state: k3s-agent patched clean (8 userland, verified Ready); k3s-server check ran as expected.
+
 ## 2026-10-24 — check-updates.sh: phased updates reported (Beszel count reconciled)
 - The test-bed VPS caught a real discrepancy: after a fully successful apply + reboot, Beszel still showed 2 updates (software-properties 0.120 -> 0.120.1) while the checker read 0. Root cause in apt's own words: "The following upgrades have been deferred due to phasing" — this apt defers phased SRUs in bulk upgrade simulations, while Beszel's list-based count includes them. Neither tool was wrong; they were counting different sets.
 - `updates/check-updates.sh` now parses the phasing section and reports it as its own line (names included) in check output and in the post-apply re-check, so checker and badge reconcile by construction (badge total = installable + phased). Phased updates are deliberately NOT forced — they are Ubuntu's rollout canary; the named-install override is documented in `updates/README.md`, which now explains the mechanism in the workflow. `vps/README.md`'s badge note points at it. (Same pass: the --apply "nothing to apply" path now still restarts the agent, as the every-run badge refresh intended.)
