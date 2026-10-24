@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-24 — Step 7 snapshot gate manifest
+- `k8s/longhorn/snapshots/<pre-schema-snapshot>.yaml`: a one-shot Longhorn Snapshot CR for the PocketBase volume (<volume-id>), the pre-schema restore point required by the build's Step 7 gate. Committed as the dated record of the gate; the snapshot itself is verified live (status.readyToUse) before any collection is created.
+
 ## 2026-10-24 — PocketBase Ingress hostname: TLS-hosts lever (annotation attempt corrected)
 - The `tailscale.com/hostname` annotation does not set an Ingress's device name — verified in the operator source (cmd/k8s-operator `hostnameForIngress`): an Ingress takes its name from the first label of `spec.tls[0].hosts[0]`, falling back to `<namespace>-<name>-ingress`; the annotation is the Service/LoadBalancer mechanism. Two live applies (including a cold-start recreate with a fresh proxy identity) confirmed the generated name both times. The manifest now sets `spec.tls` hosts `["pocketbase"]`, drops the annotation, and its header comment records the real mechanism.
 
