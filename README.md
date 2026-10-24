@@ -12,9 +12,11 @@ addressing plan, bring-up checklists, YouTube ideas). Code lives here; narrative
   Tailscale, ufw, automatic security updates). Portable: Hetzner, AWS, Azure and
   DigitalOcean all accept cloud-init user data.
 - `vps/docker-compose.yml` — cloud services. Today: Uptime Kuma (uptime monitoring +
-  status page + alerts). Bound to localhost; exposed on the tailnet via
-  `tailscale serve` (see Security notes).
-- `vps/backup.sh` / `vps/restore.sh` — tarball backup and restore for the Kuma data volume.
+  status page + alerts) and the Beszel hub (per-host metrics from agents on each
+  lab box). Both bound to localhost; exposed on the tailnet via `tailscale serve`
+  (see Security notes).
+- `vps/backup.sh` / `vps/restore.sh` — tarball backup and restore for the Kuma and
+  Beszel data volumes (on restore, the tarball name selects the volume).
 - `k8s/` — Kubernetes learning track: k3s on the Proxmox NUCs, coupled with the
   VPS setup (one repo, two runtimes). See `k8s/README.md`.
 - `CHANGELOG.md` — what changed, when.
@@ -72,7 +74,6 @@ takes user data; `docker-compose.yml` plus the data volume *is* the app.
 
 ## What's next
 
-- Beszel hub on the VPS + agents on lab boxes (per-host metrics).
 - Lab-side bring-up: firewalls → switches → Proxmox → Tailscale subnet routing.
 - Kubernetes: k3s control plane on NUC-1, worker on NUC-2 — scaffold is in
   `k8s/`, install runs during the Proxmox bring-up.

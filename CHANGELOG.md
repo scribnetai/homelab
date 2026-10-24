@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-24 — Beszel build close-out (agents, watcher, backups)
+- Agents live on proxmox, proxmox2, the Enshrouded VM, and the VPS itself — all enrolled by Tailscale IP. (The first Proxmox enrollments used LAN-IP labels and reported anyway via the agents' outbound channel; they were deleted and re-enrolled the same day. Verified from the VPS that no subnet route exists: nothing in the tailnet map, LAN egress leaves via the cloud gateway, and the agent port is unreachable at LAN addresses.)
+- Kuma now monitors the hub itself at http://beszel:8090 over the shared compose network. The serve URL cannot be monitored from inside a container on the same host: containers cannot resolve tailnet names (host-resolver bypass; the MagicDNS service address does not answer bridge-sourced queries), and connections to the host's own tailnet serve ports blackhole. A tailscaled failure stays cross-covered — every tailnet monitor flips together.
+- `vps/backup.sh` now also tarballs `beszel-data` (decision: keep the metrics history), and `vps/restore.sh` picks the volume + service from the tarball name (`kuma-data-*` / `beszel-data-*`). The hub image stays on the floating `:latest` tag (decision, 2026-10-24).
+- Cost check (Step 0 before/after pair): hub container 12.67MiB / 0.00% CPU at idle; host available RAM 1.0Gi -> 990Mi after hub + agents. README updated (Beszel live; the What's-next item is retired).
+
 ## 2026-10-24 — Beszel metrics hub on the cloud VPS (compose service #2)
 - `vps/docker-compose.yml`: added the `beszel` service (henrygd/beszel) next to Uptime Kuma — localhost-only bind `127.0.0.1:8090` (Docker bypasses ufw; the UI reaches the tailnet via a second `tailscale serve` HTTPS port, 8443), named volume `beszel-data` so backup/restore find it regardless of project directory. Kuma's service definition is unchanged.
 - Step 0 resource baseline captured pre-deploy (Kuma alone on the t4g.small: 802Mi used / 1.0Gi available of 1.8Gi RAM, no swap; disk 13G free; uptime-kuma 150.8MiB) — the before/after pair feeds the 2026-10-25 alerting-review resource gate (whether a third small container fits beside Kuma + Beszel).
