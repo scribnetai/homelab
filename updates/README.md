@@ -24,6 +24,16 @@ self-contained file — copy it to a host and it works there.
    and whether a reboot is already owed. **The host's output outranks
    the badge.** (Same number by hand: `apt-get -s dist-upgrade |
    grep -c "^Inst"`.)
+   The checker reports a second number: **deferred by Ubuntu
+   phasing**. Ubuntu rolls many updates out gradually; apt's bulk
+   simulations defer those packages ("deferred due to phasing"),
+   while Beszel's list-based count includes them. So the badge can
+   legitimately read higher than the installable count — Beszel's
+   total = installable + phased. Phased updates are a safety canary,
+   not a failure: the standard is to let them land on schedule. (A
+   named install forces past phasing when a specific fix genuinely
+   can't wait: `apt-get install --only-upgrade <name>` — a deliberate
+   override, never the default.)
 3. **Decide (window + order).** Patch one blast radius at a time:
    - **Cloud VPS** — standalone; patch in any calm window.
    - **Proxmox hosts** — never back-to-back without a health check
@@ -41,8 +51,10 @@ self-contained file — copy it to a host and it works there.
    line says one is required afterwards, reboot in the same window.
 5. **Confirm.** Every run of the script (check or apply) restarts
    `beszel-agent`, which forces the hub badge to refresh within a
-   minute: expect "Up to date" and a host re-check of 0. If the two
-   ever disagree, believe the host.
+   minute: expect the installable count at 0. The badge may still show
+   the phased remainder for days — that's Ubuntu's rollout, not a
+   failed patch. If the two ever disagree beyond the phased number,
+   believe the host.
 
 ## Scope notes
 

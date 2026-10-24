@@ -24,7 +24,7 @@ panels stay empty by design.
 
 Beszel's metrics refresh about once a minute, but the pending-OS-updates
 count does not: the agent re-checks on a slow cycle (hours) and whenever
-it (re)starts. After patching a host, the badge can lag behind reality.
+it (re)starts. After patching a host, the badge can lag behind reality. Its count also includes Ubuntu phased updates, which apt defers on a rollout schedule — the checker in `updates/` reports installable vs phased separately (see `updates/README.md`).
 Force a re-check by restarting the agent on that host:
 
     systemctl restart beszel-agent      # as root (Proxmox hosts have no sudo)
