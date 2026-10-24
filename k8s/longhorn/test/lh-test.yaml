@@ -1,0 +1,40 @@
+# Longhorn proof-gate test: a throwaway pod + Longhorn PVC.
+# The pod writes a timestamped file ONLY if one doesn't already exist,
+# so the original timestamp surviving pod death + a forced node move
+# is the pass/fail evidence. Namespace is disposable (teardown = delete ns).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lh-test
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lh-test-data
+  namespace: lh-test
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: lh-test-writer
+  namespace: lh-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: writer
+      image: busybox:1.36
+      command: ["sh", "-c", "[ -f /data/proof.txt ] || date > /data/proof.txt; sleep 3600"]
+      volumeMounts:
+        - name: data
+          mountPath: /data
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: lh-test-data
