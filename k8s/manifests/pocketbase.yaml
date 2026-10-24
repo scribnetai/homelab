@@ -1,0 +1,107 @@
+# PocketBase for Statement Analyzer — namespace finance.
+# Design (decided 2026-10-24, build sheet: statement-analyzer-pocketbase):
+# - StatefulSet replicas=1: SQLite is single-writer with a file lock.
+# - Storage: Longhorn via the longhorn-rep2 StorageClass (2 replicas;
+#   the bundled "longhorn" class hardcodes 3 and degrades on 2 nodes).
+# - Exposure: ClusterIP ONLY. No Ingress, no NodePort. Verified first via
+#   kubectl port-forward; the Tailscale-operator HTTPS front door is a
+#   separate, later step. Nothing here is reachable off-cluster.
+# - Image: community wrapper of the OFFICIAL PocketBase release binary
+#   (muchobien/pocketbase-docker), pinned by tag AND digest. Official
+#   PocketBase publishes no container image of its own.
+# - Secrets: NONE in this file. The superuser is created interactively
+#   inside the pod after deploy (kubectl exec ... superuser upsert).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: finance
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pocketbase-headless
+  namespace: finance
+spec:
+  clusterIP: None
+  selector:
+    app: pocketbase
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pocketbase
+  namespace: finance
+spec:
+  type: ClusterIP
+  selector:
+    app: pocketbase
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pocketbase
+  namespace: finance
+spec:
+  serviceName: pocketbase-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pocketbase
+  template:
+    metadata:
+      labels:
+        app: pocketbase
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: pocketbase
+          image: ghcr.io/muchobien/pocketbase:0.40.6@sha256:9a0be68a80ca1348ba8d15f217b3f983be4c094b3c571a09b3ebdeb357259338
+          args: ["serve", "--http=0.0.0.0:8080", "--dir=/pb_data"]
+          ports:
+            - name: http
+              containerPort: 8080
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "2"
+              memory: 1Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          volumeMounts:
+            - name: data
+              mountPath: /pb_data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: longhorn-rep2
+        resources:
+          requests:
+            storage: 10Gi
