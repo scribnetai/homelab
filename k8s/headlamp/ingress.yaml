@@ -1,0 +1,26 @@
+# Tailscale-operator Ingress for Headlamp (Phase 1B - pending the
+# operator install; the same operator also fronts PocketBase).
+# Requires the Tailscale Kubernetes operator in the cluster
+# (namespace "tailscale", OAuth client tagged tag:k8s-operator).
+# With ingressClassName: tailscale and NO host set, the operator names
+# the endpoint after the Ingress: https://headlamp.<tailnet>.ts.net
+# with a real Tailscale-issued certificate. The tailnet name itself is
+# deliberately not written in this file (public-repo sanitization
+# rule); MagicDNS names resolve ONLY inside the tailnet, so this
+# endpoint is unreachable from the public internet by construction.
+# NEVER add the annotation tailscale.com/funnel: "true" here - Funnel
+# publishes the service publicly. The tailnet policy grants no funnel
+# attribute to any node, which is verified before deploys.
+# Behind this door, Headlamp's own token login is the auth layer.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: headlamp
+  namespace: headlamp
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: headlamp
+      port:
+        number: 80

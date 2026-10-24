@@ -1,0 +1,67 @@
+# Headlamp login identities.
+#
+# In-cluster Headlamp authenticates with a bearer token pasted at login
+# and proxies API calls AS that identity - so the token's RBAC *is* the
+# security model. Two-tier design:
+#
+#   headlamp-viewer  - daily driver. Built-in `view` ClusterRole plus a
+#                      small extra role for nodes/metrics (view alone
+#                      cannot list nodes or read metrics-server data,
+#                      which would leave the overview gauges blank).
+#                      Cannot read Secrets, cannot delete or modify
+#                      anything, cannot exec into pods.
+#   headlamp-admin   - NOT created here on purpose. When write access is
+#                      actually needed, create the SA + cluster-admin
+#                      binding ad hoc and mint a 1-hour token; delete the
+#                      binding when done. No standing admin identity.
+#
+# Tokens are minted with `kubectl create token` (TokenRequest API):
+# short-lived, stored nowhere - no token Secret exists in the cluster
+# and no token value ever belongs in this repo.
+#   kubectl create token headlamp-viewer -n headlamp --duration=24h
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: headlamp-viewer
+  namespace: headlamp
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: headlamp-viewer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: ServiceAccount
+    name: headlamp-viewer
+    namespace: headlamp
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: headlamp-extra-view
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["nodes/metrics", "pods/metrics"]
+    verbs: ["get", "list"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["nodes", "pods"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: headlamp-extra-view
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: headlamp-extra-view
+subjects:
+  - kind: ServiceAccount
+    name: headlamp-viewer
+    namespace: headlamp

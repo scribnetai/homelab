@@ -1,0 +1,41 @@
+# Headlamp (in-cluster Kubernetes web UI) - Helm values.
+# Chart: headlamp/headlamp 0.46.0 (app 0.46.0), installed 2026-10-24.
+# These values reproduce the live install exactly; the install was done
+# with equivalent --set flags so no YAML had to be pasted on the operator
+# workstation. Reinstall path is in README.md in this folder.
+#
+# SECURITY: the first three settings are the point of this file.
+# The upstream chart DEFAULTS are clusterRoleBinding.create: true with
+# clusterRoleName: cluster-admin - i.e. the Headlamp pod's own service
+# account gets full cluster admin. We disable that outright. Headlamp
+# must act only with the identity of whoever logged in (per-user token),
+# never as itself.
+clusterRoleBinding:
+  create: false
+
+config:
+  # UNSAFE if true: every UI user is silently authenticated as the pod's
+  # service account. Keep false; Headlamp forwards the login token.
+  unsafeUseServiceAccountToken: false
+  # Helm UI integration stays OFF. CVE-2025-14269 (High): with
+  # enableHelm: true, unauthenticated users could reuse cached
+  # credentials on Headlamp <= 0.38.0. Fixed upstream in 0.39.0; we pin
+  # the feature off regardless of chart defaults.
+  enableHelm: false
+  inCluster: true
+
+service:
+  # ClusterIP only. The ONLY network door is the Tailscale-operator
+  # Ingress in ingress.yaml (tailnet-only HTTPS). No LoadBalancer,
+  # no NodePort, no LAN exposure, and NEVER a Tailscale Funnel
+  # annotation (tailscale.com/funnel) - Funnel would publish the UI
+  # to the public internet.
+  type: ClusterIP
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi

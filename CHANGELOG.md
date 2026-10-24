@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-24 - Headlamp in-cluster web UI (Phase 1, hardened)
+- New `k8s/headlamp/`: Headlamp chart/app 0.46.0 in namespace `headlamp` - the maintained, web-native successor to the archived Kubernetes Dashboard (OpenLens desktop builds are unmaintained since 2023 and were passed over). `values.yaml` reproduces the live install with the upstream defaults deliberately reversed: the chart's default ServiceAccount-to-`cluster-admin` binding is disabled, `unsafeUseServiceAccountToken` and `enableHelm` are pinned off (the latter is CVE-2025-14269 territory), Service is ClusterIP only.
+- `rbac.yaml`: login identity model - daily `headlamp-viewer` (built-in `view` + a small nodes/metrics role so the overview gauges render), read-only with no Secrets, no exec, no writes; tokens minted via TokenRequest at 24h, stored nowhere. No standing admin identity; admin is minted ad hoc at 1h.
+- `ingress.yaml`: Phase 1B tailnet door - Tailscale operator Ingress (host derived from the resource name, same pattern as `k8s/manifests/pocketbase-ingress.yaml`), pending the operator install. Tailnet-only by construction; Tailscale Funnel is never used and the tailnet policy is verified to grant no funnel attribute.
+- Verified live on deploy day: pod Running, Service ClusterIP-only, and the overview rendering both nodes Ready with live CPU/memory under the viewer identity - which also proves the metrics role works. The `auth can-i` pack in the folder README is the standing check for the no-secrets / no-delete / no-exec boundaries.
+
 ## 2026-10-21 — Hermes Agent deployment as IaC (two-service compose)
 - New `hermes/`: the deployed `docker-compose.yml` for the Hermes Agent VM — one file, two services sharing one data volume: `hermes` (messaging gateway + cron) and `hermes-backend` (`hermes serve`, the Hermes Desktop / dashboard backend, published only on the VM's Tailscale IP — placeholdered in the committed file). Auth, secrets, and operating rules in `hermes/README.md`; the data dir is host-local and gitignored, secrets only in its `.env`.
 
