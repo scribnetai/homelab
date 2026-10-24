@@ -1,0 +1,22 @@
+# Tailscale-operator Ingress for PocketBase (Step 6 of the build).
+# Requires the Tailscale Kubernetes operator installed in the cluster
+# (namespace "tailscale", OAuth client tagged tag:k8s-operator).
+# With ingressClassName: tailscale and NO host set, the operator names
+# the endpoint after the Ingress: https://pocketbase.<tailnet>.ts.net
+# with a real Tailscale-issued certificate. The tailnet name itself is
+# deliberately not written in this file (public-repo sanitization rule);
+# MagicDNS names resolve ONLY inside the tailnet, so this endpoint is
+# unreachable from the public internet by construction.
+# PocketBase's own superuser login is the auth layer behind this door.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pocketbase
+  namespace: finance
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: pocketbase
+      port:
+        number: 8080
