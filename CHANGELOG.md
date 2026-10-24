@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-24 — PocketBase Ingress hostname: TLS-hosts lever (annotation attempt corrected)
+- The `tailscale.com/hostname` annotation does not set an Ingress's device name — verified in the operator source (cmd/k8s-operator `hostnameForIngress`): an Ingress takes its name from the first label of `spec.tls[0].hosts[0]`, falling back to `<namespace>-<name>-ingress`; the annotation is the Service/LoadBalancer mechanism. Two live applies (including a cold-start recreate with a fresh proxy identity) confirmed the generated name both times. The manifest now sets `spec.tls` hosts `["pocketbase"]`, drops the annotation, and its header comment records the real mechanism.
+
 ## 2026-10-24 — PocketBase tailnet hostname pinned (Step 6 live finding)
 - The Tailscale operator is installed (ACL tagOwners + OAuth client, Devices Core RW + Auth Keys Write, tagged tag:k8s-operator; helm release deployed). First Ingress apply provisioned end-to-end — proxy pod Running, device created — but at the operator-generated name `finance-pocketbase-ingress.<tailnet>.ts.net`: with no hostname set, the operator derives the name from namespace+ingress name, not the resource name alone as the manifest comment assumed. `k8s/manifests/pocketbase-ingress.yaml` now pins `tailscale.com/hostname: "pocketbase"` and its comment records the real behavior.
 

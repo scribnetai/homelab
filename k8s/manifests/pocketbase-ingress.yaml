@@ -1,23 +1,25 @@
 # Tailscale-operator Ingress for PocketBase (Step 6 of the build).
 # Requires the Tailscale Kubernetes operator installed in the cluster
 # (namespace "tailscale", OAuth client tagged tag:k8s-operator).
-# The tailscale.com/hostname annotation pins the endpoint name:
-# https://pocketbase.<tailnet>.ts.net with a real Tailscale-issued
-# certificate. (Without it the operator generates the name from
-# namespace+ingress name - observed live 2026-10-24 as
-# "finance-pocketbase-ingress" - so the annotation is load-bearing.)
-# The tailnet name itself is
-# deliberately not written in this file (public-repo sanitization rule);
-# MagicDNS names resolve ONLY inside the tailnet, so this endpoint is
-# unreachable from the public internet by construction.
+# HOSTNAME MECHANISM (verified in the operator source, ingress.go
+# hostnameForIngress, after two live attempts 2026-10-24): for an
+# Ingress, the operator takes the device name from the FIRST label of
+# spec.tls[0].hosts[0]; with no TLS hosts it generates
+# <namespace>-<name>-ingress. The tailscale.com/hostname annotation
+# does NOT apply to Ingresses (it is the Service/LoadBalancer lever)
+# - it was tried first and changed nothing, twice.
+# So spec.tls below carries just the label "pocketbase" (no secret -
+# the operator issues the real Tailscale certificate itself), giving
+# https://pocketbase.<tailnet>.ts.net. The tailnet name itself is
+# deliberately not written in this file (public-repo sanitization
+# rule); MagicDNS names resolve ONLY inside the tailnet, so this
+# endpoint is unreachable from the public internet by construction.
 # PocketBase's own superuser login is the auth layer behind this door.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: pocketbase
   namespace: finance
-  annotations:
-    tailscale.com/hostname: "pocketbase"
 spec:
   ingressClassName: tailscale
   defaultBackend:
@@ -25,3 +27,6 @@ spec:
       name: pocketbase
       port:
         number: 8080
+  tls:
+    - hosts:
+        - "pocketbase"
