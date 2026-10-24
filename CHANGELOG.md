@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-24 — Beszel metrics hub on the cloud VPS (compose service #2)
+- `vps/docker-compose.yml`: added the `beszel` service (henrygd/beszel) next to Uptime Kuma — localhost-only bind `127.0.0.1:8090` (Docker bypasses ufw; the UI reaches the tailnet via a second `tailscale serve` HTTPS port, 8443), named volume `beszel-data` so backup/restore find it regardless of project directory. Kuma's service definition is unchanged.
+- Step 0 resource baseline captured pre-deploy (Kuma alone on the t4g.small: 802Mi used / 1.0Gi available of 1.8Gi RAM, no swap; disk 13G free; uptime-kuma 150.8MiB) — the before/after pair feeds the 2026-10-25 alerting-review resource gate (whether a third small container fits beside Kuma + Beszel).
+
 ## 2026-10-24 - Headlamp in-cluster web UI (Phase 1, hardened)
 - New `k8s/headlamp/`: Headlamp chart/app 0.46.0 in namespace `headlamp` - the maintained, web-native successor to the archived Kubernetes Dashboard (OpenLens desktop builds are unmaintained since 2023 and were passed over). `values.yaml` reproduces the live install with the upstream defaults deliberately reversed: the chart's default ServiceAccount-to-`cluster-admin` binding is disabled, `unsafeUseServiceAccountToken` and `enableHelm` are pinned off (the latter is CVE-2025-14269 territory), Service is ClusterIP only.
 - `rbac.yaml`: login identity model - daily `headlamp-viewer` (built-in `view` + a small nodes/metrics role so the overview gauges render), read-only with no Secrets, no exec, no writes; tokens minted via TokenRequest at 24h, stored nowhere. No standing admin identity; admin is minted ad hoc at 1h.

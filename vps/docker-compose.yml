@@ -16,7 +16,23 @@ services:
     volumes:
       - kuma-data:/app/data
 
+  beszel:
+    # Metrics hub: Kuma watches uptime, Beszel watches the machines
+    # (CPU / memory / disk / containers) via agents on each host.
+    image: henrygd/beszel:latest
+    container_name: beszel
+    restart: unless-stopped
+    ports:
+      # Same pattern as Kuma: localhost only (Docker bypasses ufw).
+      # The UI reaches the tailnet via a second `tailscale serve` port.
+      - "127.0.0.1:8090:8090"
+    volumes:
+      - beszel-data:/beszel/data
+
 volumes:
   kuma-data:
     # Explicit name: backup.sh / restore.sh find it regardless of project dir name.
     name: kuma-data
+  beszel-data:
+    # Explicit name, same reasoning as kuma-data.
+    name: beszel-data
