@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-24 — VPS backups brought under the GFS standard (nightly cron + rotation)
+- `vps/backup-rotate.sh` (new): ported from the Enshrouded kit's rotate script — the fleet backup standard — and adapted to backup.sh's stamp-paired tarballs (a set = the kuma-data + beszel-data tarballs from one run). Sunday's set -> weekly (keep 5), the 1st's -> monthly (keep 12), Jan 1st's -> yearly (keep 3); tiers live in `backups/archive/` with their own rotate.log. One deliberate delta vs the original: the game image self-trims its dailies, backup.sh does not, so this script also prunes the root to the newest 14 sets. Fixture-tested locally before shipping (trim, all three promotions, tier pruning, empty-dir no-op).
+- Nightly schedule documented in the README (backup 04:15 ET, rotate 04:45 ET, CRON_TZ pinned, interpreter-explicit paths) for install via crontab on the server — the VPS had NO backup cron before today; backup.sh was manual-only.
+- Honest gap, recorded rather than smoothed over: all tiers are ON-box. The off-box copy target is a pending decision (same gap exists on the Enshrouded server, whose GFS tiers also live on its own VM).
+
 ## 2026-10-24 — Beszel build close-out (agents, watcher, backups)
 - Agents live on proxmox, proxmox2, the Enshrouded VM, and the VPS itself — all enrolled by Tailscale IP. (The first Proxmox enrollments used LAN-IP labels and reported anyway via the agents' outbound channel; they were deleted and re-enrolled the same day. Verified from the VPS that no subnet route exists: nothing in the tailnet map, LAN egress leaves via the cloud gateway, and the agent port is unreachable at LAN addresses.)
 - Kuma now monitors the hub itself at http://beszel:8090 over the shared compose network. The serve URL cannot be monitored from inside a container on the same host: containers cannot resolve tailnet names (host-resolver bypass; the MagicDNS service address does not answer bridge-sourced queries), and connections to the host's own tailnet serve ports blackhole. A tailscaled failure stays cross-covered — every tailnet monitor flips together.

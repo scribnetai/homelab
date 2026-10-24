@@ -55,10 +55,22 @@ addressing plan, bring-up checklists, YouTube ideas). Code lives here; narrative
 
 ## Backup & restore
 
-- Back up: run `./backup.sh` in `vps/` on the server, then `scp` the tarball from
-  `backups/` somewhere safe.
+- Back up: `./backup.sh` in `vps/` tarballs both data volumes (Kuma + Beszel)
+  into `backups/`. A nightly cron runs it, and `backup-rotate.sh` applies the
+  fleet GFS standard to the tarball sets: newest 14 daily sets in `backups/`,
+  plus promoted tiers in `backups/archive/` (weekly = Sunday's set, keep 5;
+  monthly = the 1st's set, keep 12; yearly = Jan 1st's set, keep 3).
+  Crontab on the server (interpreter-explicit, per the fleet exec-bit rule):
+  ```
+  CRON_TZ=America/New_York
+  15 4 * * * /usr/bin/bash /home/techops/homelab/vps/backup.sh >> /home/techops/homelab/vps/backup-cron.log 2>&1
+  45 4 * * * /usr/bin/bash /home/techops/homelab/vps/backup-rotate.sh >> /home/techops/homelab/vps/backup-cron.log 2>&1
+  ```
+- Known gap: every tier currently lives ON the VPS itself. An off-box copy
+  target is a pending decision (2026-10-24) — until then, `scp` the tarballs
+  from `backups/` somewhere safe by hand.
 - Restore (fresh server, same repo): `docker compose up -d` once, then
-  `./restore.sh backups/<file>.tgz`.
+  `./restore.sh backups/<file>.tgz` (the tarball name selects the volume).
 
 ## Moving providers
 
