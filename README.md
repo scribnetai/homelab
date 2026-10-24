@@ -22,6 +22,8 @@ addressing plan, bring-up checklists, YouTube ideas). Code lives here; narrative
   the compose network.
 - `k8s/` — Kubernetes learning track: k3s on the Proxmox NUCs, coupled with the
   VPS setup (one repo, two runtimes). See `k8s/README.md`.
+- `updates/` — fleet update workflow: Beszel detects, the host verifies, a human
+  applies. Checker script + the window/ordering rules. See `updates/README.md`.
 - `CHANGELOG.md` — what changed, when.
 
 ## Quickstart: the VPS (Hetzner)

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-24 — updates/: fleet update workflow (test bed = the VPS)
+- New `updates/README.md`: the check-then-apply workflow the Beszel dashboard invited — the hub's Updates column is the (cached) fleet picture, the host's simulated dist-upgrade is the truth, and application is a per-host human decision with blast-radius ordering rules (never both Proxmox hosts back-to-back: the k3s control plane lives on one and Longhorn's replica pair spans the two; VPS anytime; workload VMs when quiet; kernel updates carry their reboot in the same window).
+- New `updates/check-updates.sh`: one self-contained script per apt host. Default mode is read-only (metadata refresh + simulated count/list + reboot-required state); `--apply` runs the upgrade interactively (no -y by design in this phase), re-checks, and restarts beszel-agent so the hub badge returns to truthful immediately. Handles root-without-sudo (Proxmox) and sudo users.
+- Scope: test bed is the cloud VPS (24 pending at first check); fleet rollout is phase 2. Containers stay on their own flow (pull + recreate + changelog); nothing anywhere auto-applies.
+
 ## 2026-10-24 — vps/README.md: monitoring-plane ops notes
 - New `vps/README.md` documenting how the cloud services behave in operation: localhost binds + the two tailscale serve doors, agent enrollment by Tailscale IP (pairing is by token, not address), the Docker-socket caveat for container stats on containerd hosts, backups pointer, and why the Kuma -> Beszel monitor uses the compose network instead of the serve URL.
 - Headline note, learned live the same day: Beszel's "updates available" count is cached — metrics refresh ~1/min, but the update check runs on a slow cycle and at agent start. After patching a host, force the re-check with `systemctl restart beszel-agent` (as root; the Proxmox hosts have no sudo) and verify against the host's own simulation: `apt-get -s dist-upgrade | grep -c "^Inst"` (0 = fully patched).
