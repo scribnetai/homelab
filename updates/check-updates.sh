@@ -4,9 +4,10 @@
 # Default mode is READ-ONLY: it refreshes package metadata (apt-get update,
 # metadata only - installs nothing) and reports what a dist-upgrade WOULD
 # do, from apt's own simulation. With --apply it runs the upgrade
-# interactively (you confirm; nothing is forced with -y), re-checks, and
-# restarts beszel-agent if present so the hub's updates badge refreshes
-# immediately instead of on the agent's slow cycle.
+# interactively (you confirm; nothing is forced with -y) and re-checks.
+# EVERY run ends by restarting beszel-agent if present, so the hub's
+# updates badge refreshes immediately instead of on the agent's slow
+# cycle - check or apply, the board is left truthful either way.
 #
 # Usage:
 #   ./check-updates.sh           # check only (safe anywhere, anytime)
@@ -26,6 +27,12 @@ command -v apt-get >/dev/null 2>&1 || { echo "ERROR: not an apt host."; exit 1; 
 
 count_pending() { apt-get -s dist-upgrade 2>/dev/null | grep -c '^Inst'; }
 list_pending()  { apt-get -s dist-upgrade 2>/dev/null | grep '^Inst' | awk '{print "  " $2}'; }
+bump_badge()    {
+  if systemctl cat beszel-agent >/dev/null 2>&1; then
+    $SUDO systemctl restart beszel-agent
+    echo "beszel-agent restarted - the hub badge refreshes within a minute."
+  fi
+}
 reboot_state()  {
   if [ -f /var/run/reboot-required ]; then
     echo "REBOOT REQUIRED$( [ -s /var/run/reboot-required.pkgs ] && echo " by: $(paste -sd' ' /var/run/reboot-required.pkgs)")"
@@ -53,9 +60,6 @@ if [ "${1:-}" = "--apply" ]; then
   echo "-- re-check --"
   echo "pending updates: $(count_pending)"
   reboot_state
-  if systemctl cat beszel-agent >/dev/null 2>&1; then
-    $SUDO systemctl restart beszel-agent
-    echo "beszel-agent restarted - the hub badge refreshes within a minute."
-  fi
 fi
+bump_badge
 exit 0

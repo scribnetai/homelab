@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-24 — check-updates.sh: Beszel badge refresh on every run
+- The agent restart that forces the hub's updates badge to re-check (previously apply-mode only) now ends EVERY run of `updates/check-updates.sh` — a plain read-only check also leaves the board truthful. Motivated by the first test-bed run: the checker surfaced a pre-existing reboot-required state (kernel + libc6, from unattended security updates) that the cached badge had never shown.
+
 ## 2026-10-24 — updates/: fleet update workflow (test bed = the VPS)
 - New `updates/README.md`: the check-then-apply workflow the Beszel dashboard invited — the hub's Updates column is the (cached) fleet picture, the host's simulated dist-upgrade is the truth, and application is a per-host human decision with blast-radius ordering rules (never both Proxmox hosts back-to-back: the k3s control plane lives on one and Longhorn's replica pair spans the two; VPS anytime; workload VMs when quiet; kernel updates carry their reboot in the same window).
 - New `updates/check-updates.sh`: one self-contained script per apt host. Default mode is read-only (metadata refresh + simulated count/list + reboot-required state); `--apply` runs the upgrade interactively (no -y by design in this phase), re-checks, and restarts beszel-agent so the hub badge returns to truthful immediately. Handles root-without-sudo (Proxmox) and sudo users.

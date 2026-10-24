@@ -39,9 +39,10 @@ self-contained file — copy it to a host and it works there.
 4. **Apply.** `./check-updates.sh --apply` — interactive apt (you see the
    plan and confirm; no `-y` in this phase by design). If the reboot
    line says one is required afterwards, reboot in the same window.
-5. **Confirm.** Apply mode restarts `beszel-agent`, which forces the hub
-   badge to refresh within a minute: expect "Up to date" and a host
-   re-check of 0. If the two ever disagree, believe the host.
+5. **Confirm.** Every run of the script (check or apply) restarts
+   `beszel-agent`, which forces the hub badge to refresh within a
+   minute: expect "Up to date" and a host re-check of 0. If the two
+   ever disagree, believe the host.
 
 ## Scope notes
 
