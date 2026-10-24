@@ -27,7 +27,12 @@ services:
       # The UI reaches the tailnet via a second `tailscale serve` port.
       - "127.0.0.1:8090:8090"
     volumes:
-      - beszel-data:/beszel/data
+      # Target is /beszel_data (underscore, root level): the current
+      # image is a scratch image whose only payload is the binary at
+      # /beszel (a file, not a directory), so /beszel/data cannot exist.
+      # Verified against the v0.21.1 image contents 2026-10-24 after the
+      # first `up` failed with "lstat .../beszel/data: not a directory".
+      - beszel-data:/beszel_data
 
 volumes:
   kuma-data:
