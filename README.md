@@ -17,6 +17,9 @@ addressing plan, bring-up checklists, YouTube ideas). Code lives here; narrative
   (see Security notes).
 - `vps/backup.sh` / `vps/restore.sh` — tarball backup and restore for the Kuma and
   Beszel data volumes (on restore, the tarball name selects the volume).
+- `vps/README.md` — ops notes for the cloud services: exposure model, Beszel agent
+  enrollment, the updates-badge refresh quirk, and why Kuma monitors the hub over
+  the compose network.
 - `k8s/` — Kubernetes learning track: k3s on the Proxmox NUCs, coupled with the
   VPS setup (one repo, two runtimes). See `k8s/README.md`.
 - `CHANGELOG.md` — what changed, when.

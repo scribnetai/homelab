@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-24 — vps/README.md: monitoring-plane ops notes
+- New `vps/README.md` documenting how the cloud services behave in operation: localhost binds + the two tailscale serve doors, agent enrollment by Tailscale IP (pairing is by token, not address), the Docker-socket caveat for container stats on containerd hosts, backups pointer, and why the Kuma -> Beszel monitor uses the compose network instead of the serve URL.
+- Headline note, learned live the same day: Beszel's "updates available" count is cached — metrics refresh ~1/min, but the update check runs on a slow cycle and at agent start. After patching a host, force the re-check with `systemctl restart beszel-agent` (as root; the Proxmox hosts have no sudo) and verify against the host's own simulation: `apt-get -s dist-upgrade | grep -c "^Inst"` (0 = fully patched).
+
 ## 2026-10-24 — VPS backups brought under the GFS standard (nightly cron + rotation)
 - `vps/backup-rotate.sh` (new): ported from the Enshrouded kit's rotate script — the fleet backup standard — and adapted to backup.sh's stamp-paired tarballs (a set = the kuma-data + beszel-data tarballs from one run). Sunday's set -> weekly (keep 5), the 1st's -> monthly (keep 12), Jan 1st's -> yearly (keep 3); tiers live in `backups/archive/` with their own rotate.log. One deliberate delta vs the original: the game image self-trims its dailies, backup.sh does not, so this script also prunes the root to the newest 14 sets. Fixture-tested locally before shipping (trim, all three promotions, tier pruning, empty-dir no-op).
 - Nightly schedule documented in the README (backup 04:15 ET, rotate 04:45 ET, CRON_TZ pinned, interpreter-explicit paths) for install via crontab on the server — the VPS had NO backup cron before today; backup.sh was manual-only.
