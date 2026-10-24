@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-24 — PocketBase tailnet hostname pinned (Step 6 live finding)
+- The Tailscale operator is installed (ACL tagOwners + OAuth client, Devices Core RW + Auth Keys Write, tagged tag:k8s-operator; helm release deployed). First Ingress apply provisioned end-to-end — proxy pod Running, device created — but at the operator-generated name `finance-pocketbase-ingress.<tailnet>.ts.net`: with no hostname set, the operator derives the name from namespace+ingress name, not the resource name alone as the manifest comment assumed. `k8s/manifests/pocketbase-ingress.yaml` now pins `tailscale.com/hostname: "pocketbase"` and its comment records the real behavior.
+
 ## 2026-10-24 — updates/README: script distribution documented
 - New "Getting the script onto a host" section: the exact fetch + sha256 fingerprint check + run block used in the phase-2 rollout, with the fingerprint compared against the trusted homelab-vps clone (the pin is deliberately not printed — it rotates with every script change). Step 2's invocation now matches the /tmp flow. Phase-2 state: k3s-agent patched clean (8 userland, verified Ready); k3s-server check ran as expected.
 
