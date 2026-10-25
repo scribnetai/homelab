@@ -1,7 +1,10 @@
 # Changelog
 
+## 2026-10-24 — Changelog scrub: planned-segment CIDR removed
+- At his direction, the planned lab segment's CIDR quoted in the Sep 28 sanitize entry (and repeated in the review entry below) is removed from this file; both entries now describe the change without printing the range. Verified by a repo-wide rescan: no private-range lab addresses remain anywhere at HEAD.
+
 ## 2026-10-24 — Repo-wide sanitization review + README refresh
-- Full review at his request: all 35 files at HEAD scanned for the real tailnet name, tailnet/LAN/public IPs, emails, token/key shapes, key fingerprints, MACs, hardware serials, his username, and generated k8s IDs (PVC/snapshot names). Result: CLEAN — every match was a placeholder (`<tailnet>`, `<redacted>`), a generic range, or cloud-init's standard NOPASSWD user config. The only judgment call left in place: a Sep 28 changelog entry quoting the planned (unbuilt) 192.0.2.0/24 lab-net design range — design documentation, no live hosts. Git HISTORY still contains tonight's earlier files (incl. the deleted snapshot manifest); a history rewrite stays his call.
+- Full review at his request: all 35 files at HEAD scanned for the real tailnet name, tailnet/LAN/public IPs, emails, token/key shapes, key fingerprints, MACs, hardware serials, his username, and generated k8s IDs (PVC/snapshot names). Result: CLEAN — every match was a placeholder (`<tailnet>`, `<redacted>`), a generic range, or cloud-init's standard NOPASSWD user config. The only judgment call left in place: a Sep 28 changelog entry quoting the planned lab-net design range (removed at his direction — see the scrub entry at the top of this file). Git HISTORY still contains tonight's earlier files (incl. the deleted snapshot manifest); a history rewrite stays his call.
 - README rewritten to match reality: the VPS has been on AWS since Oct 17 (the Hetzner quickstart was two providers stale); layout now covers hermes/, k8s/terraform, Longhorn + the rep2 StorageClass warning, PocketBase + the operator Ingress, and Headlamp; new Access model section (tailnet-only, SSM break-glass, port-forward conventions); security notes now carry the two Oct 24 lessons — bare Snapshot CRs are mirrors that get GC'd, and Tailscale Ingress hostnames come from spec.tls hosts, not the annotation.
 
 ## 2026-10-24 — Correction: the snapshot manifest removal actually landed now
@@ -100,8 +103,8 @@
   name (`vps/cloud-init.yaml`, `README.md` clone URLs now use
   `github.com/<your-org>/homelab`), the personal SSH username default
   (`scribnet` → `labuser` in `k8s/terraform/variables.tf` and
-  `terraform.tfvars.example`), and the real lab IP schema (`192.0.2.0/24`
-  → documentation range `192.0.2.0/24` in `variables.tf`,
+  `terraform.tfvars.example`), and the real lab IP schema (replaced with the
+  documentation range `192.0.2.0/24` in `variables.tf`,
   `terraform.tfvars.example`, `k8s/README.md`). Fill in your own values in
   `terraform.tfvars` (gitignored, never committed).
 - `k8s/README.md`: also corrected two leftover lines that still said
