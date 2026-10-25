@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-25 — Phase 2 monitoring LIVE (kube-prometheus-stack + Grafana door)
+- kube-prometheus-stack **92.13.1** installed in namespace `monitoring` (session pulled forward from Tue Oct 27): Prometheus 7-day retention on a 10 Gi `longhorn-rep2` volume, Grafana on 5 Gi `longhorn-rep2` with anonymous auth OFF and its admin password only in a pre-created Secret; Alertmanager disabled (existing tooling owns alerting); the stock etcd/controller/scheduler/proxy monitors disabled because k3s binds those components to localhost. Kit: `k8s/monitoring/` (values, Ingress, run sheet with the full outcome record).
+- The exposure gate's Grafana case is decided and verified: **APPROVED — LIVE** (`k8s/EXPOSURE.md`). Grafana loads over HTTPS on the tailnet with its own login; public resolvers return no usable address records. Prometheus and Alertmanager remain permanently doorless (Alertmanager is not even deployed).
+
 ## 2026-10-25 — Factorio build published (sanitized public copy)
 - The validated k3s Factorio build is published in sanitized form: build guide (`k8s/FACTORIO.md`), the disposable test-run record (`k8s/factorio/TEST-RUN.md`, gates T0–T8 all verified), the stage-2 friends-access runbook, the helper scripts (upload-save, configure-server), and the manifest. The design, decisions, and lessons are documented in full; addresses, VM/volume IDs, and host-specific details are placeholders — the full-detail working copies stay private. (This is the deliberate public version of the files removed earlier today; see the entries below.) Live deployment is still to come.
 

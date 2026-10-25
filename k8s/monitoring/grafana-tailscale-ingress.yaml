@@ -1,0 +1,39 @@
+# Grafana Tailscale Ingress — APPLIED + VERIFIED Sun Oct 25, 2026
+# (installed in the pulled-forward Phase 2 session the same day it was
+# drafted). Door verified on-tailnet with Grafana's own login; public
+# resolvers return no usable address records (checked off-tailnet).
+# Follows the PROVEN PocketBase pattern (Step 6, Oct 24):
+#   - ingressClassName: tailscale (operator already installed, ns tailscale)
+#   - The device hostname comes from spec.tls[0].hosts[0]'s FIRST LABEL
+#     ("grafana" -> grafana.<tailnet>.ts.net). The tailscale.com/hostname
+#     annotation is the Service/LoadBalancer lever and does nothing here —
+#     do not add it (that cost an hour on PocketBase; learn once).
+#   - Tailnet-only HTTPS, NO Funnel, ever.
+# This is the ONLY new tailnet door in Phase 2. Prometheus and Alertmanager
+# get no Ingress of any kind (no built-in auth) — ClusterIP only.
+# Sanitized: the short label "grafana" is all that is committed; the tailnet
+# suffix is resolved by the operator at apply time.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - grafana
+  rules:
+    - host: grafana
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                # Service name assumes release name "monitoring"
+                # (monitoring-grafana). Confirm with the Step 4 checker
+                # in PHASE2-RUNSHEET.md before applying this file.
+                name: monitoring-grafana
+                port:
+                  number: 80

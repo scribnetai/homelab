@@ -1,0 +1,97 @@
+# kube-prometheus-stack values — INSTALLED Sun Oct 25, 2026
+# (chart 92.13.1, release "monitoring", namespace monitoring).
+# Prepared the same morning as a draft for the Tue Oct 27 session;
+# the session was pulled forward to Sunday and this file was installed
+# as-is. One local edit exists only on the installing PC: root_url
+# carries the real tailnet suffix there; this committed copy keeps
+# the placeholder.
+# Implements the plan recorded in the Phase 2 reminder (Oct 24):
+#   ns monitoring; Alertmanager OFF (Kuma/Beszel cover alerting);
+#   Prometheus retention 7d on 10Gi longhorn-rep2; Grafana 5Gi longhorn-rep2;
+#   ONLY Grafana gets a Tailscale Ingress (see grafana-tailscale-ingress.yaml);
+#   Prometheus/Alertmanager are NEVER exposed (no built-in auth) — ClusterIP only.
+# Sanitized for the public homelab repo: no secrets, no IPs, no tailnet name.
+# Grafana admin credentials come from a Secret created interactively in the
+# session (Step 1 of PHASE2-RUNSHEET.md) — never from this file.
+
+alertmanager:
+  enabled: false
+
+prometheus:
+  prometheusSpec:
+    replicas: 1
+    retention: 7d
+    # VMware analogy: this is the Prometheus VM's reservation/limit pair.
+    # Sized for a 4 vCPU / 8 GB node shared with Longhorn + PocketBase:
+    # enough to be useful, small enough to never starve the host.
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 2Gi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn-rep2
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+
+grafana:
+  # Admin login via a pre-created Secret (keys: admin-user / admin-password).
+  admin:
+    existingSecret: grafana-admin
+    userKey: admin-user
+    passwordKey: admin-password
+  persistence:
+    enabled: true
+    storageClassName: longhorn-rep2
+    size: 5Gi
+  grafana.ini:
+    auth.anonymous:
+      enabled: false
+    server:
+      # Served behind the Tailscale Ingress; Grafana itself stays ClusterIP.
+      root_url: "https://grafana.<tailnet>.ts.net"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# k3s reality: the control-plane components below bind to localhost inside
+# the k3s server process (embedded etcd/kine, scheduler, controller-manager,
+# kube-proxy metrics), so their stock ServiceMonitors can never scrape and
+# would sit permanently Down — noise in exactly the attention queue this
+# stack exists to feed. Disabled deliberately, not by oversight.
+kubeEtcd:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+# The two exporters that carry the session's actual value on k3s:
+nodeExporter:
+  enabled: true
+kubeStateMetrics:
+  enabled: true
+
+windowsMonitoring:
+  enabled: false
+
+prometheusOperator:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
