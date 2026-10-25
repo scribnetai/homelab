@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-25 — Factorio working files removed from the public repo
+- The Factorio guide, test-run sheet, friends-access sheet, helper scripts, and manifest that landed here during the Oct 25 test session were working documents carrying lab-specific detail (VM identifiers and sizing, node and host placement, a node label bearing the owner's domain, the external-access design). Removed at the owner's direction — public repos get sanitized artifacts only; session runbooks with lab specifics live in private files. Verified after removal: every path returns 404 and the tree is back to the pre-Factorio file count. No IP addresses, tailnet names, usernames, or credentials were in the removed files (checked before deletion). Git history still contains them; whether to rewrite history is the owner's open call.
+
 ## 2026-10-25 — Factorio dedicated server kit (test-validated)
 
 - Added the Factorio server kit under `k8s/`: guide (`FACTORIO.md`),
