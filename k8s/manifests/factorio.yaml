@@ -1,0 +1,260 @@
+# Factorio 2.1 dedicated server — DRAFT k3s manifest.
+#
+# STATUS: Validated end to end in a disposable test run 2026-10-25
+# (see ../factorio/TEST-RUN.md); NOT currently deployed. Public copy:
+# the node label below uses an example.com placeholder — substitute
+# your own domain. Companion guide: ../FACTORIO.md (build order,
+# the save-upload flow, and external access).
+#
+# DECISIONS LOCKED 2026-10-25 (ScribNet):
+#   - Host: k3s, NOT a dedicated VM (the Enshrouded pattern was the
+#     fallback and is not needed — see ../FACTORIO.md for the why).
+#   - Pin: k3s-agent, the worker node (nodeSelector below).
+#   - First pass: LAN only. External friends joining is DEFINITE
+#     (stage 2, DECIDED 2026-10-25: Tailscale node-share of the
+#     agent, ACL-scoped to udp:34197 only — runbook in
+#     factorio/tailscale-friends-access.md; port forward to the
+#     agent VM is the parked fallback. Both ride this same hostPort
+#     bind, so stage 2 needs no rebuild).
+#   - Space Age: ON for everyone (the whole group owns the DLC).
+#   - World: crafted in ScribNet's own client (his settings, his
+#     preset picks in the real UI), then the save .zip is UPLOADED —
+#     the server never generates the real world from a PRESET env.
+#     See the save-handling note in the ConfigMap.
+#
+# Why Factorio fits k3s (unlike Enshrouded): native Linux headless
+# binary, no Wine/SteamCMD layer, one small container, all state in a
+# single data directory (/factorio: config + mods + saves). Enshrouded
+# stays on its VM; this workload was born for a StatefulSet.
+#
+# Design, following the PocketBase precedent (2026-10-24):
+#   - StatefulSet replicas=1 FOREVER. A game world is a singleton,
+#     single-writer — like SQLite, never scale this.
+#   - Storage: Longhorn longhorn-rep2 (2 replicas, one per node).
+#     The bundled "longhorn" class hardcodes 3 and degrades on 2 nodes;
+#     do not use it. PVC retention = Retain, like the Enshrouded draft:
+#     deleting the StatefulSet must never delete the world.
+#   - Image PINNED to 2.1.23 (stable 2026-10-23, FFF #449) — never
+#     `stable`/`latest`. 2.1 saves cannot downgrade to 2.0, and a
+#     floating tag would force every player's client to match a server
+#     that changed without anyone deciding it. Updates are a deliberate
+#     tag bump + a verified save backup first, in that order.
+#   - Runs as the image's factorio user (UID/GID 845, non-root since
+#     0.16). fsGroup below is what makes the fresh Longhorn volume
+#     writable by that user (the Docker flow does chown 845:845 by hand).
+#
+# Networking — the one real k3s tax for a game server:
+#   - Game port 34197/UDP is exposed via hostPort on the pinned node.
+#     Why not NodePort: the default NodePort range is 30000-32767 and
+#     34197 is outside it. Why not ServiceLB (the Enshrouded draft's
+#     LoadBalancer approach): that also preserves the port and stays
+#     the fallback option, but it adds a klipper proxy hop for UDP;
+#     hostPort is the direct bind — one less NAT layer to debug with a
+#     protocol that is sensitive to source-port rewriting.
+#   - Consequence: the pod must stay pinned (nodeSelector below) and
+#     players connect to <worker-node LAN IP>:34197. Router forwarding
+#     for outside players (if ever wanted) points UDP 34197 at the
+#     worker VM, exactly as a dedicated VM would be forwarded.
+#   - Traefik / Tailscale-operator Ingresses play NO part here — they
+#     are HTTP(S)/TCP doors, this is a UDP game port.
+#   - RCON (27015/TCP) is NOT exposed on any Service or hostPort.
+#     Admin = `kubectl -n factorio exec factorio-0 -- rcon <cmd>`
+#     (built into factoriotools 2.0.18+). The rcon password file lives
+#     in the PVC config dir; it never enters git or a manifest.
+#
+# BEFORE you ever apply this:
+#   1. Label the worker that will own the game (same label the
+#      Enshrouded draft invented; the game goes on k3s-agent,
+#      never on the control-plane node):
+#        kubectl label node k3s-agent example.com/game-server=true
+#      Checker: kubectl get nodes -L example.com/game-server
+#               -> "true" on exactly ONE node.
+#   2. Space Age is CONFIRMED (see DLC_SPACE_AGE in the ConfigMap).
+#      The one remaining check before the real save's first boot: if
+#      the save was crafted without Quality, apply the match-the-save
+#      edit noted there first.
+#   3. First boot generates /factorio/config/server-settings.json on
+#      the PVC. Set name/description/visibility + a game password in
+#      THAT file via kubectl exec, then restart the pod. The real file
+#      never lives in git (same rule as PocketBase's superuser).
+#
+# Apply / check / remove (when approved):
+#   kubectl apply -f manifests/factorio.yaml
+#   kubectl -n factorio get pods,pvc,svc -w
+#   kubectl -n factorio logs statefulset/factorio -f
+#     # healthy = server loads/creates the save and reports it is
+#     # running; then prove it with a real in-game join from the PC.
+#   kubectl -n factorio delete -f manifests/factorio.yaml
+#     ^ keeps the PVC (retention policy below). Deleting the PVC is
+#       the `compose down -v` equivalent — it deletes the world.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: factorio
+---
+# Non-sensitive configuration only. Passwords (game + RCON) live in
+# files on the PVC, created in-pod — never in this repo.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: factorio-config
+  namespace: factorio
+data:
+  # factoriotools/factorio env vars (see the image README).
+  PORT: "34197"
+  RCON_PORT: "27015"
+  # Save handling — DELIBERATELY load-latest, do not pin SAVE_NAME.
+  # The real world arrives as an uploaded save .zip (see
+  # ../FACTORIO.md). factoriotools' documented pattern for an
+  # existing save is: make it the newest file in saves/ (a fresh
+  # upload is newest by definition; the upload script verifies the
+  # ordering), then LOAD_LATEST_SAVE=true loads it on first boot —
+  # and from then on the server's own autosaves are newer still, so
+  # progress survives restarts and crashes. Pinning SAVE_NAME with
+  # load-latest=false would instead re-load the originally uploaded
+  # file on every restart.
+  LOAD_LATEST_SAVE: "true"
+  GENERATE_NEW_SAVE: "false"
+  SAVE_NAME: "_autosave1"
+  # Space Age DLC mods — CONFIRMED ON 2026-10-25 (whole group owns
+  # the DLC). "true" = space-age + elevated-rails + quality enabled.
+  # Match-the-save rule: if the uploaded save was crafted WITHOUT
+  # Quality (a 2.1 option), change this to "space-age elevated-rails"
+  # BEFORE first boot of that save, so the server does not re-enable
+  # a mod the world was generated without.
+  DLC_SPACE_AGE: "true"
+  # Leave UPDATE_MODS_ON_START unset for the first build: no
+  # factorio.com username/token in the cluster until mods are wanted,
+  # and a token is a Secret when that day comes — never a ConfigMap.
+---
+# Headless Service — required by the StatefulSet (its serviceName).
+# Stable pod DNS only; NOT the player entry point.
+apiVersion: v1
+kind: Service
+metadata:
+  name: factorio-headless
+  namespace: factorio
+spec:
+  clusterIP: None
+  selector:
+    app: factorio
+  ports:
+    - name: game
+      protocol: UDP
+      port: 34197
+      targetPort: 34197
+---
+# Cluster-internal Service for the game port (pod-to-pod / debugging).
+# Deliberately NOT NodePort and NOT LoadBalancer: external reach is
+# the hostPort bind on the pinned node (see header). RCON gets no
+# Service at all, on purpose.
+apiVersion: v1
+kind: Service
+metadata:
+  name: factorio
+  namespace: factorio
+spec:
+  type: ClusterIP
+  selector:
+    app: factorio
+  ports:
+    - name: game
+      protocol: UDP
+      port: 34197
+      targetPort: 34197
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: factorio
+  namespace: factorio
+spec:
+  serviceName: factorio-headless
+  replicas: 1 # A game world is a singleton. Never scale this.
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      app: factorio
+  template:
+    metadata:
+      labels:
+        app: factorio
+    spec:
+      # Factorio saves the world on SIGTERM. 90s mirrors the
+      # Enshrouded Compose stop_grace_period — do not shorten it:
+      # a kubelet kill mid-autosave is how saves corrupt.
+      terminationGracePeriodSeconds: 90
+      # Pin to the labeled worker (k3s-agent). The
+      # control-plane node is the wrong failure domain for this, and
+      # hostPort only means something if the node is fixed.
+      nodeSelector:
+        example.com/game-server: "true"
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+        fsGroup: 845 # factorio user — makes the Longhorn volume writable
+      containers:
+        - name: factorio
+          image: factoriotools/factorio:2.1.23
+          imagePullPolicy: IfNotPresent
+          # Deliberately NO readiness/liveness probe, same reasoning
+          # as the Enshrouded draft: no HTTP endpoint exists, UDP has
+          # no handshake a probe can test, and process exit is the
+          # signal Kubernetes restarts on. Health proof = log line +
+          # a real in-game join, not a green probe icon.
+          ports:
+            - name: game
+              protocol: UDP
+              containerPort: 34197
+              hostPort: 34197 # the player door — see header
+            - name: rcon
+              protocol: TCP
+              containerPort: 27015
+              # NO hostPort, on purpose. Exec-only admin.
+          envFrom:
+            - configMapRef:
+                name: factorio-config
+          resources:
+            # Factorio's simulation is effectively single-threaded:
+            # requests guarantee it one full core; the 2-CPU limit is
+            # headroom for startup/autosave bursts, not simulation.
+            # RAM: a fresh world idles well under 1 Gi; Space Age
+            # megabases grow saves and RAM together — 4 Gi limit fits
+            # the agent node beside Longhorn + system today, and
+            # raising it later is a manifest edit, not a VM resize.
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            # Hardening stops here on purpose (same note as the
+            # Enshrouded draft): the image entrypoint's UID drop and
+            # first-boot file generation are untested under dropped
+            # capabilities / read-only rootfs. Tighten one knob at a
+            # time after the vanilla pod is proven.
+          volumeMounts:
+            # The image's single volume: config/, mods/, saves/ all
+            # live under here — the Docker `-v /opt/factorio:/factorio`
+            # bind, as a Longhorn PVC.
+            - name: factorio-data
+              mountPath: /factorio
+  volumeClaimTemplates:
+    - metadata:
+        name: factorio-data
+      spec:
+        accessModes:
+          - ReadWriteOnce # One pod, one writer — like the bind mount.
+        storageClassName: longhorn-rep2
+        resources:
+          requests:
+            # Saves are zips (KBs young, 100+ MB for a megabase) plus
+            # mods and autosaves. 20 Gi is comfortable without
+            # starving the nodes; Longhorn volumes can expand
+            # later, Proxmox disks cannot shrink — start here.
+            storage: 20Gi

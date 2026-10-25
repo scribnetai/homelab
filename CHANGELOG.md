@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-25 — Factorio build published (sanitized public copy)
+- The validated k3s Factorio build is published in sanitized form: build guide (`k8s/FACTORIO.md`), the disposable test-run record (`k8s/factorio/TEST-RUN.md`, gates T0–T8 all verified), the stage-2 friends-access runbook, the helper scripts (upload-save, configure-server), and the manifest. The design, decisions, and lessons are documented in full; addresses, VM/volume IDs, and host-specific details are placeholders — the full-detail working copies stay private. (This is the deliberate public version of the files removed earlier today; see the entries below.) Live deployment is still to come.
+
 ## 2026-10-25 — Repository history rewritten (owner-directed purge)
 - The full history was rebuilt without the lab-specific working files and identifiers removed above: the Factorio working set and the one-shot snapshot manifest never exist in this history, and historical blobs that quoted the planned lab segment or generated resource IDs now carry documentation-range / placeholder values. All 75 commits, messages, authors, and dates are preserved; commit SHAs changed. EXISTING CLONES MUST RESYNC before pushing (git fetch + git reset --hard origin/main, or re-clone) — a push from a stale clone would resurrect the old history. Note: GitHub may retain unreachable objects server-side for a time after a rewrite; a support request is the way to force their expiry.
 
