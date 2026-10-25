@@ -60,6 +60,17 @@ which apps have a door, what authenticates behind it, and which apps
 never get one (Longhorn UI, Prometheus, Alertmanager). No Ingress is
 applied without a completed row and an approved decision recorded there.
 
+## Factorio dedicated server
+
+A game server as a first-class cluster workload: StatefulSet on the
+agent node, Longhorn-backed world storage, and deploy-time helper
+scripts for save upload and server configuration (password, admins,
+name). Full guide: [`FACTORIO.md`](FACTORIO.md); manifest:
+[`manifests/factorio.yaml`](manifests/factorio.yaml); scripts and
+the validated test-run record: [`factorio/`](factorio/). External
+players arrive in stage 2 via Tailscale node-share scoped to the
+game port only — runbook in `factorio/tailscale-friends-access.md`.
+
 ## Learning path (in order — each step teaches one real concept)
 
 1. **Smoke test + break it.** Deploy whoami, `kubectl get pods -n demo`, then

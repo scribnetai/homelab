@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-10-25 — Factorio dedicated server kit (test-validated)
+
+- Added the Factorio server kit under `k8s/`: guide (`FACTORIO.md`),
+  manifest (`manifests/factorio.yaml` — StatefulSet pinned to the
+  agent node, Longhorn `longhorn-rep2` PVC, game port as hostPort,
+  RCON never exposed), and the deploy kit in `k8s/factorio/`
+  (save-upload and server-configure scripts in PowerShell + bash,
+  stage-2 Tailscale friends-access runbook, and `TEST-RUN.md`).
+- Validated end to end on a disposable test instance the same day
+  (gates T0–T8: deploy, crafted-save upload, password/admin
+  configure, join, pod-kill resilience, clean teardown), then torn
+  down completely. The live deploy is a separate, later pass.
+- Public copy sanitized per the repo standard: real LAN/tailnet
+  addresses, the tailnet name, generated volume IDs, and personal
+  usernames replaced with placeholders; the full operational copy
+  lives in the private dedicated-servers repo. The kit's
+  PowerShell lessons (ASCII-only scripts, native-argument quoting
+  traps, `kubectl cp` colon parsing) are written up in the guide's
+  operations notes.
+
+
 ## 2026-10-24 — Changelog scrub: planned-segment CIDR removed
 - At his direction, the planned lab segment's CIDR quoted in the Sep 28 sanitize entry (and repeated in the review entry below) is removed from this file; both entries now describe the change without printing the range. Verified by a repo-wide rescan: no private-range lab addresses remain anywhere at HEAD.
 
