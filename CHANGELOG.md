@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-24 — Exposure gate for tailnet doors (k8s/EXPOSURE.md)
+- New `k8s/EXPOSURE.md`: the gate every cluster UI passes before it gets a Tailscale-operator Ingress — gate checklist (own auth or an approved compensating control, least-privilege default identity, ClusterIP only, no Funnel ever, secrets in Secrets/vault only, verification pack recorded) plus the exposure matrix. Current state recorded: PocketBase APPROVED + LIVE (verified on-tailnet, public DNS returns no address records); Headlamp STAGED (Ingress manifest written, NOT applied — port-forward only until the gate's first live decision); Longhorn UI DENIED/parked (no login of its own); Grafana ELIGIBLE but not yet approved ahead of Phase 2; Prometheus and Alertmanager PERMANENTLY DENIED (no built-in auth — ClusterIP only, forever). Failed check = door comes down first, diagnosis second. `k8s/README.md` links the gate. Documentation/policy only — this commit changes no live Ingress, ACL, or Service.
+
 ## 2026-10-24 — Step 7 snapshot gate executed via the UI
 - The pre-schema restore point exists: Longhorn snapshot `<snapshot-id>` of the PocketBase volume (created 2026-10-24T23:59:52Z via the Longhorn UI's manager path; ~247 MB captured; auto-named — the current UI offers no name field, so this entry and the build sheet designate it as THE pre-schema restore point). readyToUse was still finalizing at last read — confirm it reads true before relying on a restore.
 

@@ -52,6 +52,14 @@ the same reason: no auth keys in the repo.
 5. `kubectl get nodes` → both nodes `Ready`. Then:
    `kubectl apply -f manifests/demo-whoami.yaml`
 
+## Exposure gate
+
+Cluster UIs get tailnet doors through the Tailscale operator — under a
+gate, not by chart default. [`EXPOSURE.md`](EXPOSURE.md) is the matrix:
+which apps have a door, what authenticates behind it, and which apps
+never get one (Longhorn UI, Prometheus, Alertmanager). No Ingress is
+applied without a completed row and an approved decision recorded there.
+
 ## Learning path (in order — each step teaches one real concept)
 
 1. **Smoke test + break it.** Deploy whoami, `kubectl get pods -n demo`, then
