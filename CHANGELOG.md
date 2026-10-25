@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-24 — Step 7 snapshot gate executed via the UI
+- The pre-schema restore point exists: Longhorn snapshot `<snapshot-id>` of the PocketBase volume (created 2026-10-24T23:59:52Z via the Longhorn UI's manager path; ~247 MB captured; auto-named — the current UI offers no name field, so this entry and the build sheet designate it as THE pre-schema restore point). readyToUse was still finalizing at last read — confirm it reads true before relying on a restore.
+
 ## 2026-10-24 — Snapshot gate method corrected: bare Snapshot CRs are mirrors, not requests
 - The pre-schema gate manifest added earlier today (`k8s/longhorn/snapshots/<pre-schema-snapshot>.yaml`) does not work on Longhorn v1.13 and is REMOVED. Live evidence from longhorn-manager logs: the CR was admitted (webhook set finalizer/dataEngine/labels/owner), declared "snapshot was removed from engine" 15 ms later, and deleted by the engine controller's syncSnapshotCRs — a directly-created Snapshot CR is treated as an orphan mirror of engine state and garbage-collected; it never requests an engine snapshot. The volume itself is innocent (all status conditions in their good states, TooManySnapshots False). Snapshots are created engine-first via the manager (UI or API); the gate is executed from the Longhorn UI instead, and the resulting manager-created CR is the verification.
 
