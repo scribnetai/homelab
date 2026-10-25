@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-25 — Repository history rewritten (owner-directed purge)
+- The full history was rebuilt without the lab-specific working files and identifiers removed above: the Factorio working set and the one-shot snapshot manifest never exist in this history, and historical blobs that quoted the planned lab segment or generated resource IDs now carry documentation-range / placeholder values. All 75 commits, messages, authors, and dates are preserved; commit SHAs changed. EXISTING CLONES MUST RESYNC before pushing (git fetch + git reset --hard origin/main, or re-clone) — a push from a stale clone would resurrect the old history. Note: GitHub may retain unreachable objects server-side for a time after a rewrite; a support request is the way to force their expiry.
+
 ## 2026-10-25 — Factorio working files removed from the public repo
 - The Factorio guide, test-run sheet, friends-access sheet, helper scripts, and manifest that landed here during the Oct 25 test session were working documents carrying lab-specific detail (VM identifiers and sizing, node and host placement, a node label bearing the owner's domain, the external-access design). Removed at the owner's direction — public repos get sanitized artifacts only; session runbooks with lab specifics live in private files. Verified after removal: every path returns 404 and the tree is back to the pre-Factorio file count. No IP addresses, tailnet names, usernames, or credentials were in the removed files (checked before deletion). Git history still contains them; whether to rewrite history is the owner's open call.
 
