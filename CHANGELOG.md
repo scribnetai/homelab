@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-24 — Repo-wide sanitization review + README refresh
+- Full review at his request: all 35 files at HEAD scanned for the real tailnet name, tailnet/LAN/public IPs, emails, token/key shapes, key fingerprints, MACs, hardware serials, his username, and generated k8s IDs (PVC/snapshot names). Result: CLEAN — every match was a placeholder (`<tailnet>`, `<redacted>`), a generic range, or cloud-init's standard NOPASSWD user config. The only judgment call left in place: a Sep 28 changelog entry quoting the planned (unbuilt) 192.0.2.0/24 lab-net design range — design documentation, no live hosts. Git HISTORY still contains tonight's earlier files (incl. the deleted snapshot manifest); a history rewrite stays his call.
+- README rewritten to match reality: the VPS has been on AWS since Oct 17 (the Hetzner quickstart was two providers stale); layout now covers hermes/, k8s/terraform, Longhorn + the rep2 StorageClass warning, PocketBase + the operator Ingress, and Headlamp; new Access model section (tailnet-only, SSM break-glass, port-forward conventions); security notes now carry the two Oct 24 lessons — bare Snapshot CRs are mirrors that get GC'd, and Tailscale Ingress hostnames come from spec.tls hosts, not the annotation.
+
 ## 2026-10-24 — Correction: the snapshot manifest removal actually landed now
 - The earlier "manifest removed" commit's tree patch only walked the repo's top level and silently missed the nested file; `k8s/longhorn/snapshots/<pre-schema-snapshot>.yaml` stayed live until this pass. It is now deleted via the Contents API and verified gone (GET returns 404). The manifest also carried the volume's generated PVC name — an opaque internal ID, not a credential and no route to the cluster exists publicly — but it never belonged in a public repo under this project's sanitization standard. The gate entry below no longer prints the raw snapshot ID either; the designation lives in the private Lab Ledger.
 
