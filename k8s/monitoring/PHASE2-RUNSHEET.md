@@ -165,3 +165,29 @@ apply Headlamp's already-committed `ingress.yaml` the same way.
 - **Capture:** this kit + `EXPOSURE.md` (Grafana → APPROVED — LIVE) +
   CHANGELOG in one commit; Lab Ledger updated (services rows + Key
   Commands row 17); the Tue Oct 27 reminder retired.
+
+## Addendum — Proxmox host metrics via pve-exporter (Oct 31 2026)
+
+`prometheus-pve-exporter` (Deployment in this namespace; kit in
+`pve-exporter/`) polls the PVE API with a dedicated read-only token.
+Prometheus scrapes it through the local-only values overlay
+(`values.pve.local.yaml`, gitignored — the filled copy carries real
+LAN addresses). Community dashboard 10347 ("Proxmox via Prometheus")
+is imported; `pve_up` = 1 for all three hosts. The exporter Service
+is ClusterIP-only — no new exposure (see `EXPOSURE.md`). The helm
+release converged to deployed revision 3 in the same session.
+
+Build lessons, paid for once so they stay free:
+
+1. Create PVE users with the bare name only. A realm typed into the
+   name field produces a `<name>@<realm>@<realm>` user, and every
+   client string naming the intended user fails authentication.
+2. A token with privilege separation OFF inherits the *user's* ACLs
+   and its own ACL entries are ignored. Grant accordingly (here:
+   PVEAuditor on `/` to the user; the token row exists but is inert
+   in this mode). Symptom when wrong: auth passes, calls return 403.
+3. A failed helm upgrade can leave the Grafana rollout deadlocked on
+   its RWO Longhorn volume (old pod Running, new pod stuck in Init
+   with FailedAttachVolume). Delete the old pod to release the
+   volume, let the new pod complete, then re-run the upgrade so the
+   release converges.
