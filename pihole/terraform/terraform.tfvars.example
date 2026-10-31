@@ -16,5 +16,5 @@ pihole_ip        = "192.0.2.27/24"
 gateway          = "192.0.2.1"
 ssh_public_keys  = ["ssh-ed25519 AAAA... your-key"]
 # pihole_node      = "proxmox3"
-# pihole_vm_id     = 103
+# pihole_vm_id     = 105
 # template_id      = 9002

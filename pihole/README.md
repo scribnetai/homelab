@@ -11,7 +11,7 @@ re-IP moves it with everything else).
 | --- | --- |
 | Form | Proxmox VM from Terraform (`terraform/`), Docker Compose Pi-hole v6 inside (`docker-compose.yml`) |
 | Host | NUC-3 (the lightest node; NUC-1 carries the backup stack -- zero contention by design) |
-| VMID | 103 (pinned in the module) |
+| VMID | 105 (pinned in the module; first choice 103 collided -- see Pitfalls) |
 | Size | 2 vCPU `x86-64-v2-AES` / 2 GB RAM / 32 GB on local-lvm -- roaming CPU type (D7): DNS must restore/migrate onto any host |
 | Address | The `.27` static in the tfvars (current LAN), which mirrors to the `.27` slot of the future lab VLAN at re-IP -- same trick the PBS VM used with `.24` |
 | Template | That node's own Ubuntu 24.04 cloud template copy (per-node templates on local storage) |
@@ -32,7 +32,7 @@ Stage gates:
 
 1. **Preflight (read-only, one node: NUC-3).**
    - Ping the planned `.27` -- expect no reply / 100% loss.
-   - `qm config 103` + `pct config 103` -- both "does not exist".
+   - VMID freedom, CLUSTER-WIDE: `ls /etc/pve/nodes/*/qemu-server/105.conf /etc/pve/nodes/*/lxc/105.conf` on any host finds nothing. (`qm config <id>` on one node is NOT a freedom check -- it only reads that node's folder; see Pitfalls.)
    - `pvesm status` -- local-lvm has room (a 32 GB disk is noise).
    - Template on THIS node: `qm config <template_id>` shows the
      Ubuntu 24.04 cloud template, `template: 1`.
@@ -60,7 +60,7 @@ Stage gates:
 5. **Apply + first boot.** Cloud-init runs package updates and
    installs Docker + Tailscale, so first boot takes a few minutes.
    Proof: SSH in as the cloud-init user on the `.27`, and
-   `qm agent 103 ping` answers from the host side.
+   `qm agent 105 ping` answers from the host side.
 6. **Tailscale enroll (by hand).** `sudo tailscale up` (plain -- NO
    `--ssh`), then verify `tailscale debug prefs` shows RunSSH
    false and lock it: `sudo tailscale set --ssh=false`. Standing
@@ -103,6 +103,12 @@ Stage gates:
 
 - `versions.tf` ships with the module from birth (the pbs module's
   init failure was its absence).
+- VMID freedom checks are cluster-wide or worthless: first-choice
+  103 read "does not exist" from the build node while a PBS-restored
+  VM already held 103 on another node (single-node `qm config` only
+  reads the local folder). The clone died at the config rename
+  ("File exists") until the build moved to 105 and the check became
+  the `/etc/pve/nodes/*/` glob in step 1.
 - Plan does not prove the endpoint or the SSH leg -- tfvars gate
   (step 2) + same-window env ritual (step 3) exist because of
   that.

@@ -16,9 +16,9 @@ variable "pihole_node" {
 }
 
 variable "pihole_vm_id" {
-  description = "VMID for the Pi-hole VM (verify it is free first: qm config <id> and pct config <id> should both report no such VM/CT)"
+  description = "VMID for the Pi-hole VM (verify it is free CLUSTER-WIDE first: ls /etc/pve/nodes/*/qemu-server/<id>.conf /etc/pve/nodes/*/lxc/<id>.conf on any host must find nothing -- qm config on one node only reads that node's folder and is NOT a freedom check)"
   type        = number
-  default     = 103
+  default     = 105
 }
 
 variable "template_id" {

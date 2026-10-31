@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-31 -- Pi-hole VMID correction: 103 -> 105 (VM built, live)
+- Fix (failure-driven, same pass): `pihole/terraform` default VMID is now **105** and the build is LIVE -- VM 105 `pihole` on NUC-3, 2 vCPU / 2 GB / 32 GB, verified running and answering at its `.27` address. First choice 103 collided with a PBS-restored VM (Satisfactory-Dedicated) that already held it on another node.
+- Root cause worth keeping: the preflight `qm config 103` was run on the build node, whose config lookup only reads that node's own folder -- it reported "does not exist" while 103 existed cluster-wide. The variable description and the README preflight now specify the cluster-wide glob check instead. Two failed applies, zero side effects: the clone dies at the config rename before any disk exists.
+
 ## 2026-10-31 -- Pi-hole VM (Terraform, NUC-3): DNS ad-blocker, stage 1 of 2
 - New `pihole/` build: a dedicated VM for Pi-hole v6 (Docker Compose inside), cloned by Terraform from the host node's own Ubuntu 24.04 template -- the k3s module pattern, not an ISO install. VMID 103 pinned, 2 vCPU / 2 GB / 32 GB, `x86-64-v2-AES` roaming CPU type (D7): DNS must restore/migrate onto any host.
 - Placement decision: NUC-3, the lightest node -- NUC-1 carries the PBS backup stack and this build deliberately has zero contention with running backups. Deliberately NOT in k3s: DNS lives under the cluster, never inside it (no circular dependency if the cluster/storage is down).
