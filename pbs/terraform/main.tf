@@ -57,6 +57,10 @@ resource "proxmox_virtual_environment_vm" "pbs" {
   }
 
   cdrom {
+    # enabled must be set explicitly: the provider's plan resolved it to
+    # false, which would create the VM with NO installer media attached.
+    # Caught at plan review, before the first apply (Oct 31 2026).
+    enabled   = true
     file_id   = var.pbs_iso
     interface = "ide2"
   }
