@@ -11,3 +11,8 @@ backups/
 *.tfstate.*
 .terraform/
 *.tfplan
+
+# Local-only helm value overlays (filled copies carry real LAN IPs)
+# and the pve-exporter config (token value) — never commit.
+*.local.yaml
+pve-exporter-config.yml
