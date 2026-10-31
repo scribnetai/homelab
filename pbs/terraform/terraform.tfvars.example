@@ -1,0 +1,10 @@
+# Copy to terraform.tfvars (gitignored) and fill in your real values.
+# The API token is NOT set here -- it comes from the environment:
+#   PROXMOX_VE_API_TOKEN (and PROXMOX_VE_SSH_USERNAME / _PASSWORD if your
+#   setup needs the provider's SSH leg; the k3s module's window ritual
+#   applies here too -- env vars die with the PowerShell window).
+
+proxmox_endpoint = "https://192.0.2.10:8006/"
+# proxmox_insecure_tls = true
+# pbs_node             = "proxmox"
+# pbs_vm_id            = 101
