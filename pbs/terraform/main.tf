@@ -1,9 +1,10 @@
 # Proxmox Backup Server VM, managed by Terraform.
 #
 # ONE VM on NUC-1, installed from the official PBS ISO (interactive
-# installer -- there is no cloud-init path for PBS). Terraform creates the
-# VM with the ISO attached and starts it; a human runs the installer in the
-# console, then the cdrom block comes out in a follow-up change.
+# installer -- there is no cloud-init path for PBS). Terraform created the
+# VM with the ISO attached; a human ran the installer in the console; the
+# cdrom was detached in the follow-up change (see the note at the
+# network_device block). Steady state: no cdrom.
 #
 # The datastore is NOT a virtual disk: the host's USB backup drive is
 # passed through whole to this VM after the install (qm set, by hand --
@@ -56,14 +57,12 @@ resource "proxmox_virtual_environment_vm" "pbs" {
     size         = local.disk_gb
   }
 
-  cdrom {
-    # enabled must be set explicitly: the provider's plan resolved it to
-    # false, which would create the VM with NO installer media attached.
-    # Caught at plan review, before the first apply (Oct 31 2026).
-    enabled   = true
-    file_id   = var.pbs_iso
-    interface = "ide2"
-  }
+  # No cdrom in steady state: the installer ISO was attached at creation
+  # (file_id = var.pbs_iso) and detached after the OS install, when the VM
+  # rebooted back into the installer (boot order favored the ISO over the
+  # freshly installed disk). To reinstall from scratch, re-add a cdrom
+  # block here temporarily. (The provider's cdrom "enabled" attribute is
+  # deprecated/no-op -- file_id governs media; moot now, but noted.)
 
   network_device {
     bridge = "vmbr0"
