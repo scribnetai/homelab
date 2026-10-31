@@ -6,6 +6,7 @@
 - Per-node `cpu_type`: nodes that may migrate use `x86-64-v2-AES` (the fleet common denominator); the first agent uses `host` because the pinned Factorio server needs full CPU performance. The matching Factorio pod patch (CPU limit removed, memory limit raised to 10 Gi) is applied alongside this batch.
 - VM description string ASCII-matched to what Proxmox already stores, so plans show no cosmetic diff.
 - Manifest bookkeeping: `k8s/manifests/factorio.yaml` now records the live resource limits (memory 10 Gi, no CPU limit), so the published manifest matches the cluster it describes.
+- Longhorn: added `k8s/longhorn/storageclass-longhorn-rep3.yaml` -- the explicit 3-replica StorageClass for the now-3-node fleet, twin of `longhorn-rep2`. The bundled class stays untouched, and existing volumes keep their current replica count until deliberately raised per volume.
 
 ## 2026-10-25 — Phase 2 monitoring LIVE (kube-prometheus-stack + Grafana door)
 - kube-prometheus-stack **92.13.1** installed in namespace `monitoring` (session pulled forward from Tue Oct 27): Prometheus 7-day retention on a 10 Gi `longhorn-rep2` volume, Grafana on 5 Gi `longhorn-rep2` with anonymous auth OFF and its admin password only in a pre-created Secret; Alertmanager disabled (existing tooling owns alerting); the stock etcd/controller/scheduler/proxy monitors disabled because k3s binds those components to localhost. Kit: `k8s/monitoring/` (values, Ingress, run sheet with the full outcome record).

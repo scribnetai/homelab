@@ -1,0 +1,28 @@
+# Custom StorageClass: Longhorn with 3 replicas.
+# WHY THIS EXISTS: the fleet grew to 3 nodes on 2026-10-31, so replica
+# count 3 is schedulable for the first time. We still do NOT use
+# Longhorn's bundled "longhorn" StorageClass even though it also says 3:
+# the driver-deployer regenerates the bundled class from its own template,
+# and an explicit class keeps the replica count a deliberate per-workload
+# choice that survives Longhorn upgrades. Twin of storageclass-longhorn-
+# rep2.yaml (see that file for the 2-node history). StorageClass parameters
+# only affect NEW volumes; existing volumes change replica count per
+# volume, in Longhorn, as a separate deliberate act.
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: longhorn-rep3
+provisioner: driver.longhorn.io
+allowVolumeExpansion: true
+reclaimPolicy: "Delete"
+volumeBindingMode: Immediate
+parameters:
+  numberOfReplicas: "3"
+  staleReplicaTimeout: "30"
+  fromBackup: ""
+  fsType: "ext4"
+  dataLocality: "disabled"
+  unmapMarkSnapChainRemoved: "ignored"
+  disableRevisionCounter: "true"
+  dataEngine: "v1"
+  backupTargetName: "default"
