@@ -218,18 +218,19 @@ spec:
                 name: factorio-config
           resources:
             # Factorio's simulation is effectively single-threaded:
-            # requests guarantee it one full core; the 2-CPU limit is
-            # headroom for startup/autosave bursts, not simulation.
+            # requests guarantee it one full core. There is NO CPU
+            # limit (removed 2026-10-31): a cap only throttles the
+            # simulation on big bases; the node is the real ceiling.
             # RAM: a fresh world idles well under 1 Gi; Space Age
-            # megabases grow saves and RAM together — 4 Gi limit fits
-            # the agent node beside Longhorn + system today, and
-            # raising it later is a manifest edit, not a VM resize.
+            # megabases grow saves and RAM together -- the 10 Gi
+            # limit (raised from 4 Gi on 2026-10-31) fits the agent
+            # node beside Longhorn + system today, and raising it
+            # later is a manifest edit, not a VM resize.
             requests:
               cpu: "1"
               memory: "2Gi"
             limits:
-              cpu: "2"
-              memory: "4Gi"
+              memory: "10Gi"
           securityContext:
             privileged: false
             allowPrivilegeEscalation: false
