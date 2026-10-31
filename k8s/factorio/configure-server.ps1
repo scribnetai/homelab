@@ -35,6 +35,7 @@
 param(
     [string]$ServerName,
     [string]$ServerDescription,
+    [int]$AutosaveInterval = 5,
     [switch]$SkipWhitelist,
     [string]$Namespace = "factorio",
     [string]$StatefulSet = "factorio",
@@ -202,6 +203,20 @@ try {
     $settings.description = $ServerDescription
     Write-Host "Server identity: '$($settings.name)' -- '$($settings.description)'"
 
+    # Enforced posture (not prompts -- these are the security model,
+    # decided 2026-10-25): the server is not publicly listed
+    # (public/LAN browser off), but Steam visibility is ON at the
+    # owner's call so friends can connect through Steam; joining
+    # still requires a verified Factorio identity plus password +
+    # whitelist. The whitelist itself is enforced by the IMAGE's
+    # entrypoint, which always starts the server with
+    # --use-server-whitelist pointing at the file this script
+    # writes -- the file is the gate; no settings toggle to miss.
+    $settings.visibility = [PSCustomObject]@{ public = $false; lan = $false; steam = $true }
+    $settings.require_user_verification = $true
+    $settings.autosave_interval = $AutosaveInterval
+    Write-Host "Posture: visibility public=false lan=false steam=true, require-user-verification = true, autosave_interval = $AutosaveInterval"
+
     $json = $settings | ConvertTo-Json -Depth 10
     [IO.File]::WriteAllText($localSettings, $json, (New-Object Text.UTF8Encoding($false)))
 
@@ -239,6 +254,7 @@ try {
     Write-Host "Checker: game_password length on the PVC = $($pwOnPvc.Length) (expected $($plain1.Length))"
     if ($pwOnPvc.Length -ne $plain1.Length) { throw "Password length mismatch -- do NOT start the server until this is reconciled. Helper pod left running." }
     Write-Host "Checker: server name on the PVC = '$($pvcSettings.name)'"
+    Write-Host "Checker: visibility on the PVC = public:$($pvcSettings.visibility.public) lan:$($pvcSettings.visibility.lan) steam:$($pvcSettings.visibility.steam), autosave_interval = $($pvcSettings.autosave_interval), require_user_verification = $($pvcSettings.require_user_verification)"
     $adminsBack = & kubectl -n $Namespace exec $HelperPod -- cat /data/config/server-adminlist.json
     Write-Host "Checker: server-adminlist.json on the PVC = $adminsBack"
     if (-not $SkipWhitelist) {
