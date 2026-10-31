@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-31 -- Pi-hole VM (Terraform, NUC-3): DNS ad-blocker, stage 1 of 2
+- New `pihole/` build: a dedicated VM for Pi-hole v6 (Docker Compose inside), cloned by Terraform from the host node's own Ubuntu 24.04 template -- the k3s module pattern, not an ISO install. VMID 103 pinned, 2 vCPU / 2 GB / 32 GB, `x86-64-v2-AES` roaming CPU type (D7): DNS must restore/migrate onto any host.
+- Placement decision: NUC-3, the lightest node -- NUC-1 carries the PBS backup stack and this build deliberately has zero contention with running backups. Deliberately NOT in k3s: DNS lives under the cluster, never inside it (no circular dependency if the cluster/storage is down).
+- Addressing: the next slot in the static block in tfvars (doc-range defaults in the module), chosen so the future re-IP maps it to the same last octet in the lab VLAN -- the PBS VM's `.24` trick, repeated.
+- `pihole/docker-compose.yml`: Pi-hole v6 seed config -- Quad9 primary + Cloudflare secondary upstreams, listening mode ALL, state in `./etc-pihole`. NO password in env or git: on v6 the old WEBPASSWORD variable is inert; the admin password is set interactively post-deploy (`docker exec pihole pihole setpassword`) into the password manager. No NET_ADMIN / no port 67: Pi-hole is not the DHCP server here.
+- `pihole/README.md`: the build doc -- preflight gates (free IP, free VMID, per-node template, snippets+images content), the tfvars doc-range gate (a from-scratch plan never dials the API, so a placeholder endpoint would pass plan and fail apply -- the pbs module's lesson), the same-window env-leg ritual, and the Ubuntu port-53 landmine (systemd-resolved stub listener vs Docker's published 53) with its fix.
+- Stage gate, stated in the doc: stage 1 is install + proof from ONE hand-pointed device. Handing Pi-hole out via router DHCP is stage 2, a separate decision -- a single unproven instance does not become critical-path for the whole house.
+
 ## 2026-10-31 -- k3s Terraform reconciled: third node, 120 GB disks, agent CPU passthrough
 - `k8s/terraform` caught up to live in one batch (IaC-as-standard pass): node sizing reconciled to what the cluster actually runs (4 vCPU / 16 GB -- the earlier live resize had never been committed), then all node disks grown 80 -> 120 GB for Longhorn headroom at replica 3.
 - Third node added: `agent2` on the third Proxmox host, a full clone of that host's Ubuntu 24.04 template (9002), joining as a k3s agent. Longhorn replica 3 rides on an explicit rep3 StorageClass, never the bundled default.

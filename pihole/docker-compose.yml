@@ -1,0 +1,37 @@
+# Pi-hole v6 stack -- runs inside the pihole VM (see terraform/).
+# Deploy path on the VM: ~/pihole/docker-compose.yml
+#
+# Deliberate choices, do not "fix" them casually:
+# - No admin password in this file or any env var. On v6 the old
+#   WEBPASSWORD variable does nothing; the supported path is to set
+#   the password interactively after first start:
+#     docker exec pihole pihole setpassword
+#   and store it in the password manager. Secrets never live in git.
+# - No NET_ADMIN capability and no port 67: Pi-hole is NOT the DHCP
+#   server here. The router keeps DHCP; clients reach Pi-hole by
+#   being handed its address as their DNS server (stage 2 -- see
+#   README). DHCP mode would need NET_ADMIN + a different network
+#   posture.
+# - Upstreams are Quad9 (privacy posture, malware filtering) with
+#   Cloudflare as second. Change in the admin UI if you re-decide;
+#   FTLCONF values below only seed first start.
+# - State persists in ./etc-pihole (the whole config is one TOML
+#   file on v6, /etc/pihole/pihole.toml, plus gravity's database).
+#   The PBS job backing up the VM covers this with it.
+services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    hostname: pihole
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "80:80/tcp"
+      - "443:443/tcp"
+    environment:
+      TZ: "America/New_York"
+      FTLCONF_dns_listeningMode: "ALL"
+      FTLCONF_dns_upstreams: "9.9.9.9;1.1.1.1"
+    volumes:
+      - "./etc-pihole:/etc/pihole"
+    restart: unless-stopped
