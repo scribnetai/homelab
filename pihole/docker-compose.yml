@@ -24,8 +24,16 @@ services:
     image: pihole/pihole:latest
     hostname: pihole
     ports:
-      - "53:53/tcp"
-      - "53:53/udp"
+      # Port 53 binds ONLY on the VM's LAN address (PIHOLE_BIND_IP,
+      # set in the local .env next to this file -- local only, never
+      # committed; the doc-range value below is just the fallback).
+      # Reason: Ubuntu's systemd-resolved squats on port 53 at BOTH
+      # 127.0.0.53 and 127.0.0.54, which collides with a wildcard
+      # 0.0.0.0:53 publish. A LAN-address bind never overlaps the
+      # loopbacks, so the host resolver needs no surgery and keeps
+      # using its own upstream. At re-IP, change the one .env line.
+      - "${PIHOLE_BIND_IP:-192.0.2.27}:53:53/tcp"
+      - "${PIHOLE_BIND_IP:-192.0.2.27}:53:53/udp"
       - "80:80/tcp"
       - "443:443/tcp"
     environment:

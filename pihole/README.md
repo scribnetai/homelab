@@ -69,20 +69,25 @@ Stage gates:
    (`updates/` in this repo) check -> apply -> reboot if the
    kernel moved. A DNS server goes live current, not stale.
 8. **Port 53 landmine (Ubuntu VM -- the step everyone skips).**
-   Ubuntu's `systemd-resolved` stub listener squats on
-   127.0.0.53:53, which collides with Docker publishing port 53.
-   Check first: `ss -tulpn | grep :53`.
-   Fix: set `DNSStubListener=no` in `/etc/systemd/resolved.conf`,
-   restart `systemd-resolved`, and repoint `/etc/resolv.conf` at
-   `/run/systemd/resolve/resolv.conf` (the upstream list -- the
-   stub symlink would point the host at a listener that no longer
-   exists). Verify: the host still resolves (`getent hosts
-   example.com`) and nothing owns :53 except what you start next.
-   The VM's own upstream is a public resolver by design (see
-   `dns_servers` in the module) -- it never resolves through
-   itself.
-9. **Deploy Pi-hole.** Clone this repo on the VM, copy
-   `pihole/docker-compose.yml` to `~/pihole/`, `docker compose up
+   Ubuntu's `systemd-resolved` squats on port 53 at BOTH
+   127.0.0.53 (stub) and 127.0.0.54 -- verified live on this VM
+   with `ss -tulpn | grep :53`. A wildcard `0.0.0.0:53` Docker
+   publish collides with those loopback binds. The classic fix
+   (DNSStubListener=no + resolv.conf surgery) only evicts one
+   listener and rewires the host's own resolution -- rejected
+   here. Chosen instead: **leave resolved completely alone** (the
+   host keeps resolving via its cloud-init upstream, exactly as
+   designed -- a DNS server's own resolver never depends on
+   itself) and bind the container's port 53 to the VM's LAN
+   address only, via `PIHOLE_BIND_IP` in a local `.env` next to
+   the compose file. No overlap, no surgery, deterministic.
+   Verify after deploy: `ss -tulpn | grep :53` shows the loopback
+   pair PLUS docker-proxy on the LAN address -- coexistence is
+   the proof.
+9. **Deploy Pi-hole.** Fetch `pihole/docker-compose.yml` from
+   this repo into `~/pihole/` (sha256-gate it against origin like
+   the update checker), write the one-line local `.env`
+   (`PIHOLE_BIND_IP=<the VM's LAN address>`), `docker compose up
    -d`. First start prints a random admin password ONCE in
    `docker compose logs pihole` -- ignore it and set your own:
    `docker exec pihole pihole setpassword`, stored in the password
