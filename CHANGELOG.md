@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-31 -- k3s Terraform reconciled: third node, 120 GB disks, agent CPU passthrough
+- `k8s/terraform` caught up to live in one batch (IaC-as-standard pass): node sizing reconciled to what the cluster actually runs (4 vCPU / 16 GB -- the earlier live resize had never been committed), then all node disks grown 80 -> 120 GB for Longhorn headroom at replica 3.
+- Third node added: `agent2` on the third Proxmox host, a full clone of that host's Ubuntu 24.04 template (9002), joining as a k3s agent. Longhorn replica 3 rides on an explicit rep3 StorageClass, never the bundled default.
+- Per-node `cpu_type`: nodes that may migrate use `x86-64-v2-AES` (the fleet common denominator); the first agent uses `host` because the pinned Factorio server needs full CPU performance. The matching Factorio pod patch (CPU limit removed, memory limit raised to 10 Gi) is applied alongside this batch.
+- VM description string ASCII-matched to what Proxmox already stores, so plans show no cosmetic diff.
+
 ## 2026-10-25 — Phase 2 monitoring LIVE (kube-prometheus-stack + Grafana door)
 - kube-prometheus-stack **92.13.1** installed in namespace `monitoring` (session pulled forward from Tue Oct 27): Prometheus 7-day retention on a 10 Gi `longhorn-rep2` volume, Grafana on 5 Gi `longhorn-rep2` with anonymous auth OFF and its admin password only in a pre-created Secret; Alertmanager disabled (existing tooling owns alerting); the stock etcd/controller/scheduler/proxy monitors disabled because k3s binds those components to localhost. Kit: `k8s/monitoring/` (values, Ingress, run sheet with the full outcome record).
 - The exposure gate's Grafana case is decided and verified: **APPROVED — LIVE** (`k8s/EXPOSURE.md`). Grafana loads over HTTPS on the tailnet with its own login; public resolvers return no usable address records. Prometheus and Alertmanager remain permanently doorless (Alertmanager is not even deployed).

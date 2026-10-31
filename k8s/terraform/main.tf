@@ -1,30 +1,46 @@
 # k3s Proxmox nodes, managed by Terraform.
 #
-# Two VMs — server (control plane) on NUC-1, agent (worker) on NUC-2 — as full
-# clones of the Ubuntu 24.04 cloud-init template built by build-template.sh.
+# Three VMs -- server (control plane) on NUC-1, agents (workers) on NUC-2 and
+# NUC-3 -- as full clones of the Ubuntu 24.04 cloud-init templates built by
+# build-template.sh.
 # Cloud-init (via snippets) installs the qemu guest agent + Tailscale and sets
 # lab-net IPs. You run `tailscale up` once per VM by hand afterwards — no
 # Tailscale auth keys are committed anywhere in this repo.
 
 locals {
+  # CPU types: nodes that may migrate across hosts use x86-64-v2-AES, the
+  # fleet common denominator. The first agent runs "host" because the
+  # Factorio server is pinned to it and needs full CPU performance.
   nodes = {
     server = {
       node_name   = var.proxmox_node_server
       hostname    = "k3s-server"
       template_id = 9000
-      cores       = 2
-      memory      = 4096
-      disk_gb     = 32
+      cores       = 4
+      memory      = 16384
+      disk_gb     = 120
       ip          = var.server_ip
+      cpu_type    = "x86-64-v2-AES"
     }
     agent = {
       node_name   = var.proxmox_node_agent
       hostname    = "k3s-agent"
       template_id = 9001
-      cores       = 2
-      memory      = 4096
-      disk_gb     = 32
+      cores       = 4
+      memory      = 16384
+      disk_gb     = 120
       ip          = var.agent_ip
+      cpu_type    = "host"
+    }
+    agent2 = {
+      node_name   = var.proxmox_node_agent2
+      hostname    = "k3s-agent2"
+      template_id = 9002
+      cores       = 4
+      memory      = 16384
+      disk_gb     = 120
+      ip          = var.agent2_ip
+      cpu_type    = "x86-64-v2-AES"
     }
   }
 }
@@ -56,7 +72,7 @@ resource "proxmox_virtual_environment_vm" "k3s" {
   for_each = local.nodes
 
   name            = each.value.hostname
-  description     = "k3s ${each.key} node — managed by Terraform (k8s/terraform)"
+  description     = "k3s ${each.key} node -- managed by Terraform (k8s/terraform)"
   tags            = ["k3s", "terraform"]
   node_name       = each.value.node_name
   stop_on_destroy = true
@@ -69,7 +85,7 @@ resource "proxmox_virtual_environment_vm" "k3s" {
 
   cpu {
     cores = each.value.cores
-    type  = "x86-64-v2-AES"
+    type  = each.value.cpu_type
   }
 
   memory {

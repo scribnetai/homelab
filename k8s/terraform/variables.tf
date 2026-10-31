@@ -21,6 +21,12 @@ variable "proxmox_node_agent" {
   default     = "proxmox2"
 }
 
+variable "proxmox_node_agent2" {
+  description = "Proxmox node hosting the second k3s agent VM (NUC-3)"
+  type        = string
+  default     = "proxmox3"
+}
+
 variable "vm_datastore" {
   description = "Datastore for VM disks"
   type        = string
@@ -55,6 +61,12 @@ variable "agent_ip" {
   description = "k3s agent VM address (CIDR)"
   type        = string
   default     = "192.0.2.22/24"
+}
+
+variable "agent2_ip" {
+  description = "Second k3s agent VM address (CIDR)"
+  type        = string
+  default     = "192.0.2.23/24"
 }
 
 variable "ssh_username" {
