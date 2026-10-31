@@ -34,7 +34,7 @@ provider "proxmox" {
 }
 
 resource "proxmox_virtual_environment_vm" "pbs" {
-  name        = "pbs"
+  name        = "proxmox-backup"
   description = "Proxmox Backup Server -- fleet backups; datastore on the passed-through USB drive. Managed by Terraform."
   node_name   = var.pbs_node
   vm_id       = var.pbs_vm_id
