@@ -19,9 +19,16 @@ Terraform module: [`terraform/`](terraform/).
   points cost only their changed chunks.
 - **CPU `x86-64-v2-AES`** (fleet standard, D7): restorable anywhere.
 - **Not covered, by design (yet):** drive death / house-level loss (the
-  drive is still a single copy — offsite sync is a later phase; PBS 4.2
-  supports S3 datastores and sync jobs), and the PVE cluster config
-  itself (`/etc/pve` — the repos carry those definitions).
+  drive is still a single copy), and the PVE cluster config itself
+  (`/etc/pve` — the repos carry those definitions). Offsite is DECIDED
+  (2026-10-31): **AWS S3** in the existing lab AWS account — build
+  scheduled for the next session (Nov 1). Estimate at fleet scale:
+  ~100–150 GB steady state, roughly $2.50–3.50/mo on S3 Standard, plus a
+  ~$10–13 egress bill only on a full-fleet restore day. Form to settle
+  at build time: PBS 4.2 S3 datastore vs a sync job (4.2's S3 support is
+  new — pilot before trusting it as the only offsite leg). Prep note:
+  S3 sits outside the `LabOperator` IAM policy's scope, so bucket +
+  PBS-scoped credentials are an explicit build step.
 
 ## Build sequence (2026-10-31)
 
@@ -57,6 +64,9 @@ Terraform module: [`terraform/`](terraform/).
 10. [ ] Enroll in monitoring: Beszel agent + Uptime Kuma monitors, like
     every other host. Tailscale + LE cert for the UI door, tailnet-only,
     same as the PVE hosts.
+11. [ ] **Offsite leg (decided 2026-10-31, build Nov 1):** AWS S3 target
+    per the Design section — bucket in the lab AWS account, credentials
+    scoped to PBS, pilot restore from the S3 side before it's trusted.
 
 ## Pitfalls already paid for (2026-10-31)
 
