@@ -27,6 +27,15 @@ Stage gates:
   whole house mid-backup-cutover. A second instance + sync (the
   tour's pattern) is the long-term answer to the single-point
   question.
+- **Stage T (prepared Oct 31 2026; separate decision to enable):**
+  Pi-hole as the TAILNET's DNS. The stack binds port 53 on the
+  VM's tailnet address too (steps 8-9), so enabling is one
+  admin-console change -- DNS tab, global nameserver = the VM's
+  tailnet address, "Override DNS servers" on. Deliberately NOT
+  enabled yet: it makes Pi-hole critical-path for every tailnet
+  device, phones off-LAN included (their DNS would hairpin home).
+  Infra VMs stay on public upstreams regardless -- no circular
+  DNS under the infrastructure.
 
 ## Build sequence
 
@@ -87,8 +96,9 @@ Stage gates:
 9. **Deploy Pi-hole.** Fetch `pihole/docker-compose.yml` from
    this repo into `~/pihole/` (sha256-gate it against origin like
    the update checker), write the one-line local `.env`
-   (`PIHOLE_BIND_IP=<the VM's LAN address>`), `docker compose up
-   -d`. First start prints a random admin password ONCE in
+   (`PIHOLE_BIND_IP=<the VM's LAN address>` and
+   `PIHOLE_TS_BIND_IP=<the VM's tailnet address>`), `docker
+   compose up -d`. First start prints a random admin password ONCE in
    `docker compose logs pihole` -- ignore it and set your own:
    `docker exec pihole pihole setpassword`, stored in the password
    manager at that moment. Admin UI: `http://<vm-ip>/admin`,
@@ -97,6 +107,12 @@ Stage gates:
     - `dig @<vm-ip> one.one.one.one` -- real answer.
     - `dig @<vm-ip> doubleclick.net` -- 0.0.0.0 (gravity is
       working, not just the resolver).
+    - Tailnet path proof (Stage T preparation -- changes nothing
+      for clients): `dig @<vm-tailnet-ip> doubleclick.net` from
+      any tailnet device -- 0.0.0.0. And after any host reboot,
+      check `docker compose ps`: if the container sits Exited,
+      Docker won the boot race against tailscaled and the tailnet
+      bind failed -- `docker compose up -d` restarts it.
     - Admin UI loads, query log shows both test queries.
     - One real device pointed at it by hand for a day before
       Stage 2 is even discussed.

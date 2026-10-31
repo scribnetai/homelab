@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-31 -- Pi-hole tailnet bind (Stage T prepared, not enabled)
+
+- The compose stack now binds port 53 on the VM's tailnet address as well as its LAN address (`PIHOLE_TS_BIND_IP` in the same local `.env`; the committed fallback is a shared-address-space placeholder, never a real tailnet address). Rationale: a tailnet global nameserver must be reachable from every mesh device, and this lab deliberately does not advertise the LAN subnet route -- the LAN bind alone is invisible off-LAN.
+- Preparation only: no client's DNS changes until the admin-console step (global nameserver + override) is separately approved. That flip makes Pi-hole critical-path for the whole tailnet, phones off-LAN included, so it gets its own decision. Known operational note, documented in the compose file and README: if Docker wins the boot race against tailscaled, the tailnet bind can fail and the container will not start; re-running `docker compose up -d` once tailscaled is up is the fix.
+
 ## 2026-10-31 -- Pi-hole VMID correction: 103 -> 105 (VM built, live)
 - Fix (failure-driven, same pass): `pihole/terraform` default VMID is now **105** and the build is LIVE -- VM 105 `pihole` on NUC-3, 2 vCPU / 2 GB / 32 GB, verified running and answering at its `.27` address. First choice 103 collided with a PBS-restored VM (Satisfactory-Dedicated) that already held it on another node.
 - Root cause worth keeping: the preflight `qm config 103` was run on the build node, whose config lookup only reads that node's own folder -- it reported "does not exist" while 103 existed cluster-wide. The variable description and the README preflight now specify the cluster-wide glob check instead. Two failed applies, zero side effects: the clone dies at the config rename before any disk exists.

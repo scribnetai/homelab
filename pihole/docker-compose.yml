@@ -34,6 +34,20 @@ services:
       # using its own upstream. At re-IP, change the one .env line.
       - "${PIHOLE_BIND_IP:-192.0.2.27}:53:53/tcp"
       - "${PIHOLE_BIND_IP:-192.0.2.27}:53:53/udp"
+      # Port 53 ALSO binds on the VM's tailnet address
+      # (PIHOLE_TS_BIND_IP, same local .env; the fallback below is
+      # a shared-address-space placeholder, never a real tailnet
+      # address). Purpose: a tailnet global nameserver must be an
+      # address every mesh device can reach -- this lab deliberately
+      # does NOT advertise the LAN subnet route, so the LAN bind
+      # alone is invisible off-LAN. The console flip that makes
+      # devices USE this address is a separate decision (README,
+      # Stage T). Boot note: if Docker wins the boot race against
+      # tailscaled, this bind can fail and the container will not
+      # start -- `docker compose up -d` once tailscaled is up is
+      # the fix.
+      - "${PIHOLE_TS_BIND_IP:-100.64.0.27}:53:53/tcp"
+      - "${PIHOLE_TS_BIND_IP:-100.64.0.27}:53:53/udp"
       - "80:80/tcp"
       - "443:443/tcp"
     environment:
