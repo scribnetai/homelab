@@ -37,36 +37,59 @@ Terraform module: [`terraform/`](terraform/).
    presented a mismatched TLS cert from the host that day; the ISO came
    via the PC + GUI upload instead — the checksum is the gate either way.)
 2. [x] VM created by Terraform (`terraform/`), installer ISO attached.
-3. [ ] OS install (interactive wizard): 32 GB disk, America/New_York,
+3. [x] OS install (interactive wizard): 32 GB disk, America/New_York,
    root password to the password manager, hostname
    `proxmox-backup.home.arpa`, static IP (the fleet's backup slot — .24,
    mirroring the future 10.10.20.24), gateway/DNS = the LAN gateway.
-4. [ ] **Update workflow, before anything else runs on it** (standing
+4. [x] **Update workflow, before anything else runs on it** (standing
    rule — a new machine joins patched, same as the k3s nodes):
    swap the default enterprise repo for `pbs-no-subscription`
    (PBS GUI → Repositories, or the deb822 sources), then the fleet
    checker, fingerprint-verified as always:
    `bash /tmp/check-updates.sh --apply` (see `updates/README.md`).
    Take any required reboot in this window — the node serves nothing yet.
-5. [ ] Detach the installer ISO: remove the `cdrom` block in
+5. [x] Detach the installer ISO: remove the `cdrom` block in
    `terraform/main.tf`, plan, apply (the whole block is temporary by
    design; it takes the deprecated `enabled` attribute out with it).
-6. [ ] USB passthrough of the backup drive (`qm set` on the host — the
+6. [x] USB passthrough of the backup drive (`qm set` on the host — the
    provider has no USB block; record the device id used), format inside
    PBS, create the datastore on it.
-7. [ ] PBS user + API token scoped to the datastore (backup role only);
+7. [x] PBS user + API token scoped to the datastore (backup role only);
    credentials to the password manager, never to git/chat/ledger.
-8. [ ] Add PBS as storage on the PVE cluster; one backup job for all
+8. [x] Add PBS as storage on the PVE cluster; one backup job for all
    VMs, nightly, with prune/GC retention (daily 14 / weekly 8 /
    monthly 6 as the starting policy) and a scheduled **verify job**.
-9. [ ] **Proof before trust:** one manual backup + a test restore to a
+9. [x] **Proof before trust:** one manual backup + a test restore to a
    scratch VMID, verified booting, then deleted.
-10. [ ] Enroll in monitoring: Beszel agent + Uptime Kuma monitors, like
+10. [x] Enroll in monitoring: Beszel agent + Uptime Kuma monitors, like
     every other host. Tailscale + LE cert for the UI door, tailnet-only,
     same as the PVE hosts.
 11. [ ] **Offsite leg (decided 2026-10-31, build Nov 1):** AWS S3 target
     per the Design section — bucket in the lab AWS account, credentials
     scoped to PBS, pilot restore from the S3 side before it's trusted.
+
+
+**Completion notes (2026-10-31):** Steps 3-10 finished the same day.
+The three orphaned vzdump archives found on the drive were restored to
+VMs first (PBS cannot ingest .vma archives - restore-and-rebackup is
+the migration path), then the host released the drive, it was passed
+through whole (WD easystore, USB id 1058:266a), and PBS formatted it
+as a **Local** datastore named `usb5tb` - the Removable datastore type
+was evaluated and rejected (it is the drive-rotation mode; this disk
+is a fixture). Retention as built: prune job daily (keep 14 daily /
+8 weekly / 6 monthly), GC **weekly** (the drive is SMR; daily GC is
+needless seek-thrash), verify job weekly with a 30-day re-verify.
+Privilege-separation gotcha: the API token needed its **own**
+DatastoreBackup grant - the user's grant does not flow to a
+privilege-separated token, and the PVE storage add fails with a
+misleading "Cannot find datastore" until the token grant exists.
+Proof (step 9): a live VM was backed up and restored to a scratch
+VMID, boot-verified **with its NIC disconnected** - a restore
+resurrects the MAC, IP and node identities of the original, so never
+boot a clone onto the live network. Monitoring (step 10): Tailscale,
+the Beszel agent and Uptime Kuma monitors are enrolled; the LE cert
+for the web UI is still pending (Kuma runs ignore-TLS until then).
+Step 11 (S3 offsite) remains, scheduled Nov 1.
 
 ## Pitfalls already paid for (2026-10-31)
 
