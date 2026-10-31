@@ -1,0 +1,56 @@
+# prometheus-pve-exporter: polls the PVE API with a dedicated read-only
+# token (PVEAuditor) and serves metrics on :9221/pve?target=<node>.
+# The config (incl. the token value) lives ONLY in the pve-exporter-config
+# Secret, created interactively - never in git. See config.example.yml.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pve-exporter
+  namespace: monitoring
+  labels:
+    app: pve-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pve-exporter
+  template:
+    metadata:
+      labels:
+        app: pve-exporter
+    spec:
+      containers:
+        - name: pve-exporter
+          image: prompve/prometheus-pve-exporter:3.7.0
+          args:
+            - --config.file=/etc/prometheus/config.yml
+          ports:
+            - name: metrics
+              containerPort: 9221
+          readinessProbe:
+            httpGet:
+              path: /
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 101
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: config
+              mountPath: /etc/prometheus
+              readOnly: true
+      volumes:
+        - name: config
+          secret:
+            secretName: pve-exporter-config

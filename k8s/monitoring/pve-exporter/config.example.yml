@@ -1,0 +1,13 @@
+# Template for the pve-exporter-config Secret. Copy to a LOCAL file,
+# fill in the token value from the password manager, create the Secret,
+# then DELETE the local file:
+#   kubectl create secret generic pve-exporter-config -n monitoring \
+#     --from-file=config.yml=./pve-exporter-config.yml
+# verify_ssl is false because the exporter dials the hosts by LAN IP,
+# where the tailnet LE certs cannot validate; the token is read-only
+# (PVEAuditor) and the traffic never leaves the LAN.
+default:
+  user: pve-exporter@pve
+  token_name: exporter
+  token_value: <TOKEN FROM PASSWORD MANAGER>
+  verify_ssl: false

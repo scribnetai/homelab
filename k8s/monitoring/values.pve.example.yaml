@@ -1,0 +1,29 @@
+# TEMPLATE for the local-only helm overlay that wires Prometheus to the
+# pve-exporter. The filled copy carries real LAN IPs, so it is NEVER
+# committed - save it as values.pve.local.yaml in this directory
+# (gitignored), replace the doc-range targets with the real host IPs,
+# and apply both value files:
+#   helm upgrade monitoring prometheus-community/kube-prometheus-stack \
+#     -n monitoring -f values.yaml -f values.pve.local.yaml \
+#     --version 92.13.1 --wait --timeout 10m
+# The exporter connects to the target's API (any node serves the whole
+# cluster); the pve_node label becomes the Grafana instance name.
+prometheus:
+  prometheusSpec:
+    additionalScrapeConfigs:
+      - job_name: pve
+        metrics_path: /pve
+        static_configs:
+          - targets: ["192.0.2.11"]
+            labels: { pve_node: "proxmox" }
+          - targets: ["192.0.2.12"]
+            labels: { pve_node: "proxmox2" }
+          - targets: ["192.0.2.13"]
+            labels: { pve_node: "proxmox3" }
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: __param_target
+          - source_labels: [pve_node]
+            target_label: instance
+          - target_label: __address__
+            replacement: pve-exporter.monitoring.svc.cluster.local:9221
