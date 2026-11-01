@@ -91,7 +91,27 @@ the Beszel agent and Uptime Kuma monitors are enrolled; the LE cert
 for the web UI is still pending (Kuma runs ignore-TLS until then).
 Step 11 (S3 offsite) remains, scheduled Nov 1.
 
+**Follow-ups (2026-11-01):** First scheduled night verified — the
+01:00 job captured every VM (14 backup tasks, 0 errors; prune, GC and
+a verify job all OK; ~87 GB used on the datastore), including the two
+restored-archive VMs, which are cleared for deletion with the PBS
+snapshots as their archive. The dashboard's "No Proxmox Backup Server
+repository enabled" banner traced to the build-day repo swap (see
+Pitfalls): with the no-subscription repo restored, PBS upgraded
+4.2.0-1 -> **4.2.8-1** and the kernel to the fleet's 7.0.14-26. The
+step-10 LE cert is installed (split `proxy.pem`/`proxy.key`,
+`root:backup` 640) and auto-renews monthly via
+`pbs/renew-pbs-cert.sh`; the Kuma monitor targets the tailnet name
+with TLS verification on. Tailscale SSH verified off (RunSSH read
+back `false`). Step 11 (S3) is the remaining item.
+
 ## Pitfalls already paid for (2026-10-31)
+
+- **A repo swap is not done until apt proves it.** Build day disabled
+  the enterprise source but never added no-subscription; the only
+  symptom was the dashboard banner, and the box missed the 4.2.1-4.2.8
+  updates. Verify a swap with `apt-get update` output (the new repo's
+  InRelease line), never with the sources file's mere existence.
 
 - A fresh module needs `versions.tf` (required_providers `bpg/proxmox`);
   without it `terraform init` resolves the nonexistent `hashicorp/proxmox`.

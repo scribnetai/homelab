@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-11-01 -- PBS: S3 offsite leg deferred one week
+
+- Step 11 (the S3-backed offsite copy) moves from Nov 1 to the following week at the owner's call. Everything it depends on landed today: first-night verification, the repo fix + 4.2.8 upgrade, the LE cert + renewal, name-based storage validation, and the fleet DNS sweep. The leg itself is unchanged: bucket in the lab AWS account, credentials scoped to PBS, pilot restore from the S3 side before it is trusted.
+
+## 2026-11-01 -- PBS: no-subscription repo restored, upgraded to 4.2.8, LE cert live
+
+- Failure-driven fix, surfaced by the dashboard banner ("No Proxmox Backup Server repository enabled"): the build-day repo swap disabled the enterprise source (`Enabled: false` — that half was right) but never added the no-subscription one, so PBS package updates were silently blind and the box sat on 4.2.0-1 while 4.2.8-1 existed. Fix: `/etc/apt/sources.list.d/proxmox.sources` (deb822, `pbs-no-subscription`), mirroring the enterprise file's shape; then `apt-get dist-upgrade` brought PBS to **4.2.8-1** and the kernel to **7.0.14-26** (fleet parity). Lesson: a repo swap is not done until `apt-get update` shows the new repo's InRelease line.
+- LE cert for the web UI (step 10's pending item, now done): `tailscale cert` for the node's tailnet name, installed into PBS 4's split layout — chain in `proxy.pem`, key in `proxy.key`, both `root:backup` 640 — and `proxmox-backup-proxy` restarted. Verified served: subject = the tailnet name, issuer Let's Encrypt, verify return code 0. Uptime Kuma's PBS monitor no longer needs ignore-TLS.
+- New `pbs/renew-pbs-cert.sh`: monthly, hash-gated renewal mirroring the PVE hosts' cert script — re-issues via `tailscale cert`, reinstalls only when the cert changed, restarts the proxy only then. Cron: 1st, 03:20 (staggered from the hosts' 03:15). The tailnet name is read back from tailscaled at runtime; nothing host-specific is baked in.
+- Tailworm close-out for this host: Tailscale SSH RunSSH read back `false` and the explicit `--ssh=false` lock set — applied on build day, but never verified until now.
+
 ## 2026-10-31 -- Pi-hole tailnet bind (Stage T prepared, not enabled)
 
 - The compose stack now binds port 53 on the VM's tailnet address as well as its LAN address (`PIHOLE_TS_BIND_IP` in the same local `.env`; the committed fallback is a shared-address-space placeholder, never a real tailnet address). Rationale: a tailnet global nameserver must be reachable from every mesh device, and this lab deliberately does not advertise the LAN subnet route -- the LAN bind alone is invisible off-LAN.
