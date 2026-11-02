@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-01 -- Immich photo archive VM (kit built; deploy pending)
+
+- New `immich/` build: a dedicated VM for Immich (self-hosted photo library, the Techno Tim backlog's Wave 3 item) -- a Terraform module in the fleet pattern (clone the target node's Ubuntu 24.04 template; cloud-init installs Docker + Tailscale), VMID 113, 4 vCPU / 8 GB, on **proxmox3** because it holds the fleet's 1 TB local drive. Deliberately NOT in k3s: Longhorn's small triple-replicated disks are the wrong home for an archive; home services run on Compose, close to their data.
+- Storage: two disks -- 32 GB OS plus a dedicated **600 GB data disk** mounted at /data holding both the library and the Immich Postgres database (one mount, one backup unit; grows online when the archive earns it). The static address takes the next slot in the lab block, keeping the same last octet after the planned re-IP (the .24/.27 trick).
+- Backup posture (owner's decision, 2026-11-01): the VM is THE copy of the photo archive -- accepted because the PBS nightly job covers ALL VMs, so its disk lands on the backup datastore every night. The remaining same-house gap closes with the PBS S3 leg (step 11 there, deferred one week the same day).
+- `immich/docker-compose.yml` is upstream's compose file shipped unmodified (provenance header in the file; diff-verified against upstream at build time). Configuration lives in `.env` (a committed example; the filled file never enters git). Exposure is tailnet-only via Tailscale Serve. The README's runbook carries the fleet rituals (cluster-wide VMID freedom check, CorpDNS verification, doc-range tfvars gate, mkfs device discipline) and the phase-2 note: bulk import of the historical photo folders is a separate checksummed pass, not part of the install.
+
 ## 2026-11-01 -- PBS: S3 offsite leg deferred one week
 
 - Step 11 (the S3-backed offsite copy) moves from Nov 1 to the following week at the owner's call. Everything it depends on landed today: first-night verification, the repo fix + 4.2.8 upgrade, the LE cert + renewal, name-based storage validation, and the fleet DNS sweep. The leg itself is unchanged: bucket in the lab AWS account, credentials scoped to PBS, pilot restore from the S3 side before it is trusted.

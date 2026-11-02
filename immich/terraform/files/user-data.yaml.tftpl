@@ -1,0 +1,32 @@
+#cloud-config
+# Rendered by Terraform (files/user-data.yaml.tftpl).
+# Fleet-standard cloud-init (same shape as the k3s nodes) plus Docker:
+# installs the qemu guest agent, Tailscale, and the Docker engine +
+# compose plugin that the Immich stack runs on. You run `tailscale up`
+# once by hand afterwards -- no Tailscale auth keys live in this repo.
+hostname: ${hostname}
+manage_etc_hosts: true
+package_update: true
+packages:
+  - qemu-guest-agent
+  - docker.io
+  - docker-compose-v2
+users:
+  - name: ${username}
+    groups: sudo
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+%{ for key in ssh_keys ~}
+      - ${key}
+%{ endfor ~}
+runcmd:
+  - systemctl enable --now qemu-guest-agent
+  - systemctl enable --now docker
+  # The docker group only exists after docker.io installs, and runcmd
+  # runs after packages -- so the group add lives here, not in the
+  # user block above (cloud-init creates users before packages land).
+  - usermod -aG docker ${username}
+  - curl -fsSL https://tailscale.com/install.sh -o /tmp/tailscale-install.sh
+  - sh /tmp/tailscale-install.sh
+  - systemctl enable --now tailscaled
