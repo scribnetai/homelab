@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-05 -- Immich: provider lockfile committed (deployment live)
+
+- `immich/terraform/.terraform.lock.hcl` committed: pins bpg/proxmox **0.119.0** (constraint `~> 0.111`) with its registry hashes, so future `init` runs verify the exact provider build instead of drifting to whatever is current. The module's file set is now complete in git.
+- Status update to the 2026-11-01 entry below: VM 113 is LIVE (installed Nov 1; re-addressed in the Nov 3 re-IP), admin account + defaults set, first PBS capture verified Nov 4 (snapshot 2026-11-04 01:05), Beszel agent and Uptime Kuma keyword monitor (`/api/server/ping`) enrolled Nov 5, phone app sync started Nov 5. Phase 2 (checksummed bulk import of the historical folders) remains a separate pass.
+
 ## 2026-11-01 -- Immich photo archive VM (kit built; deploy pending)
 
 - New `immich/` build: a dedicated VM for Immich (self-hosted photo library, the Techno Tim backlog's Wave 3 item) -- a Terraform module in the fleet pattern (clone the target node's Ubuntu 24.04 template; cloud-init installs Docker + Tailscale), VMID 113, 4 vCPU / 8 GB, on **proxmox3** because it holds the fleet's 1 TB local drive. Deliberately NOT in k3s: Longhorn's small triple-replicated disks are the wrong home for an archive; home services run on Compose, close to their data.
