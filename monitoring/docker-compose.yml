@@ -1,0 +1,38 @@
+#
+# PeaNUT -- a tiny dashboard for Network UPS Tools (NUT).
+# Upstream: https://github.com/Brandawg93/PeaNUT (image brandawg93/peanut).
+# Written for this lab's deployment (not an upstream file):
+#
+# - It reads the NUT server (upsd) OVER THE LAN: NUT_HOST / NUT_PORT
+#   come from the local .env (see .env.example). The committed
+#   fallbacks below are doc-range placeholders, never real addresses.
+# - The web UI binds to the VM's localhost ONLY. The door is
+#   Tailscale Serve on the VM (https on :8447 -> 127.0.0.1:8080);
+#   nothing is published to the LAN or the internet.
+# - PeaNUT keeps its settings (and its own admin account) in
+#   ./peanut-config, mounted at /config. On first open it asks you
+#   to create that admin account in the browser -- no credentials
+#   exist in this file or in git.
+# - upsd currently has NO users of its own (telemetry reads are open
+#   on the lab LAN until the NUT shutdown-orchestration phase mints
+#   real upsd users). PeaNUT therefore connects with no username /
+#   password; give it the monitoring user when upsd gets one.
+# - PeaNUT also exposes Prometheus metrics at /api/v1/metrics --
+#   the future Grafana scrape points there, not at upsd.
+
+name: monitoring
+
+services:
+  peanut:
+    image: brandawg93/peanut:latest
+    container_name: peanut
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      - WEB_PORT=8080
+      - NUT_HOST=${NUT_HOST:-192.0.2.12}
+      - NUT_PORT=${NUT_PORT:-3493}
+    volumes:
+      - ./peanut-config:/config
+      - /etc/localtime:/etc/localtime:ro

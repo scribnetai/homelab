@@ -1,0 +1,20 @@
+# Copy to terraform.tfvars (gitignored) and fill in your real values.
+# The API token is NOT set here -- it comes from the environment:
+#   PROXMOX_VE_API_TOKEN (and PROXMOX_VE_SSH_USERNAME / _PASSWORD for
+#   the provider's SSH leg -- the snippet upload rides it). Set every
+#   PROXMOX_VE_* variable in the SAME PowerShell window that runs
+#   terraform: session env vars die with the window.
+#
+# GATE (learned on the pbs module): a from-scratch plan never dials
+# the API, so a placeholder endpoint left in this file passes plan
+# and only fails at apply. After editing, verify no doc-range value
+# survives: Select-String -Path .\terraform.tfvars -Pattern '192\.0\.2\.'
+# must return NOTHING.
+
+proxmox_endpoint = "https://192.0.2.10:8006/"
+monitoring_ip    = "192.0.2.16/24"
+gateway          = "192.0.2.1"
+ssh_public_keys  = ["ssh-ed25519 AAAA... your-key"]
+# monitoring_node  = "proxmox2"
+# monitoring_vm_id = 114
+# template_id      = 9001

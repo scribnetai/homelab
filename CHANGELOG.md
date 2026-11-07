@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-06 -- Monitoring VM (Terraform): dedicated monitoring-tools home, PeaNUT first tenant (kit built; deploy pending)
+
+- New `monitoring/` build: a dedicated VM for the fleet's monitoring viewers, decided 2026-11-06 (owner's call over the Hermes VM and k3s) because more monitoring tools are expected to join it, and a viewer shouldn't share fate with what it watches. Terraform module in the fleet pattern (clone the target node's Ubuntu 24.04 template; cloud-init installs qemu-guest-agent + Docker + Tailscale), VMID 114, 2 vCPU / 4 GB / 32 GB, on **proxmox2** -- the RAM-headroom host, and the NUT server's own host (the rack UPS is USB-attached to it; NUT server monitoring landed there earlier the same day).
+- First tenant: **PeaNUT**, the NUT dashboard, as a Compose stack (`monitoring/docker-compose.yml`). It reads upsd over the LAN (server address from a local `.env`; doc-range fallback in git), binds the VM's localhost only, and takes its door from Tailscale Serve (:8447). Its own admin account is created in the browser on first open; no credentials exist in git. upsd itself still has no users (telemetry reads are LAN-open) until the NUT shutdown-orchestration phase mints them. PeaNUT's Prometheus endpoint (`/api/v1/metrics`) is the noted Grafana hook for later.
+- Exposure/backup posture matches the fleet: tailnet-only doors, upstream resolver plus `--accept-dns=false` so the watcher never depends on the DNS it may need to watch fail, and PBS nightly coverage (ALL VMs) as the backup story. The provider lockfile commit follows the first real `init`, per the immich precedent.
+
 ## 2026-11-05 -- Immich: provider lockfile committed (deployment live)
 
 - `immich/terraform/.terraform.lock.hcl` committed: pins bpg/proxmox **0.119.0** (constraint `~> 0.111`) with its registry hashes, so future `init` runs verify the exact provider build instead of drifting to whatever is current. The module's file set is now complete in git.
